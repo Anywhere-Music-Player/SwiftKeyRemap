@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import Sparkle
 
 var statusItem = NSStatusBar.system.statusItem(withLength: CGFloat(NSStatusItem.variableLength))
 var loginItem = NSMenuItem()
@@ -17,6 +18,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   var windowController: NSWindowController?
   var preferenceWindowController: PreferenceWindowController!
   let keyEvent = KeyEvent()
+  // Sparkle。開始は起動処理の中で行う（旧設定の引き継ぎを先に済ませるため）
+  let updaterController = SPUStandardUpdaterController(
+    startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
 
   func applicationDidFinishLaunching(_ aNotification: Notification) {
     // Insert code here to initialize your application
@@ -45,15 +49,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     userDefaults.set(currentVersion, forKey: "lastLaunchVersion")
 
-    // 「起動時にアップデートを確認」
-    let checkUpdateState = userDefaults.object(forKey: "checkUpdateAtlaunch")
-
-    if checkUpdateState == nil {
-      userDefaults.set(1, forKey: "checkUpdateAtlaunch")
-      checkUpdate()
-    } else if (checkUpdateState as? Int) == 1 {
-      checkUpdate()
+    // 旧設定「起動時にアップデートを確認」を Sparkle の自動確認設定へ引き継ぐ（キーを消すので 1 度だけ走る）
+    if let legacyCheckUpdate = userDefaults.object(forKey: "checkUpdateAtlaunch") as? Int {
+      updaterController.updater.automaticallyChecksForUpdates = (legacyCheckUpdate == 1)
+      userDefaults.removeObject(forKey: "checkUpdateAtlaunch")
     }
+    updaterController.startUpdater()
 
     // 除外アプリ設定
     if let exclusionAppsListData = userDefaults.object(forKey: "exclusionApps")

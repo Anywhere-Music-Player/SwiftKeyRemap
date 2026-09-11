@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		620E0AD71D9E97BA0067F88B /* checkUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 620E0AD61D9E97BA0067F88B /* checkUpdate.swift */; };
 		620E0B441D9F2F8F0067F88B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 620E0B431D9F2F8F0067F88B /* AppDelegate.m */; };
 		620E0B471D9F2F8F0067F88B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 620E0B461D9F2F8F0067F88B /* main.m */; };
 		620E0B491D9F2F8F0067F88B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 620E0B481D9F2F8F0067F88B /* Assets.xcassets */; };
@@ -55,7 +54,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		620E0AD61D9E97BA0067F88B /* checkUpdate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = checkUpdate.swift; sourceTree = "<group>"; };
 		620E0B401D9F2F8F0067F88B /* cmd-eikana-helper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "cmd-eikana-helper.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		620E0B421D9F2F8F0067F88B /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		620E0B431D9F2F8F0067F88B /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -159,7 +157,6 @@
 			isa = PBXGroup;
 			children = (
 				6294281A1D387503001BD4E9 /* AppDelegate.swift */,
-				620E0AD61D9E97BA0067F88B /* checkUpdate.swift */,
 				62D162E61D3B350B009C95B0 /* toggleLaunchAtStartup.swift */,
 				627265F51D3CC84000703F85 /* KeyEvent.swift */,
 				6242D4BB1DA2455D00CA80DD /* KeyboardShortcut.swift */,
@@ -340,7 +337,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				62FE51631DC75ECE0037B8D1 /* AppData.swift in Sources */,
-				620E0AD71D9E97BA0067F88B /* checkUpdate.swift in Sources */,
 				62BEA2A41DA739B6004409AE /* ShortcutsController.swift in Sources */,
 				624BF4CA1DD182F500A70E2C /* MediaKeyEvent.swift in Sources */,
 				627265F61D3CC84000703F85 /* KeyEvent.swift in Sources */,
