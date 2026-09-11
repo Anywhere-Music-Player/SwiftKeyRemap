@@ -45,5 +45,11 @@
 	<string>Main</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://eikana.dominion525.com/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>0MdoL3JIvI/Xpqg9gBz0JL9OGDIi7tFu3b7M3pieA/0=</string>
 </dict>
 </plist>

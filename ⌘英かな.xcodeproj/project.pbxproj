@@ -28,6 +28,7 @@
 		62D162E71D3B350B009C95B0 /* toggleLaunchAtStartup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D162E61D3B350B009C95B0 /* toggleLaunchAtStartup.swift */; };
 		62FE51611DC70C5B0037B8D1 /* ExclusionAppsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FE51601DC70C5B0037B8D1 /* ExclusionAppsController.swift */; };
 		62FE51631DC75ECE0037B8D1 /* AppData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FE51621DC75ECE0037B8D1 /* AppData.swift */; };
+		7A9C0A012F3B4C5D6E7F0002 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 7A9C0A012F3B4C5D6E7F0003 /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +100,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A9C0A012F3B4C5D6E7F0002 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -212,6 +214,9 @@
 			dependencies = (
 			);
 			name = "⌘英かな";
+			packageProductDependencies = (
+				7A9C0A012F3B4C5D6E7F0003 /* Sparkle */,
+			);
 			productName = StatusBarApp;
 			productReference = 629428171D387503001BD4E9 /* ⌘英かな.app */;
 			productType = "com.apple.product-type.application";
@@ -278,6 +283,9 @@
 				ja,
 			);
 			mainGroup = 6294280E1D387503001BD4E9;
+			packageReferences = (
+				7A9C0A012F3B4C5D6E7F0004 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			productRefGroup = 629428181D387503001BD4E9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -690,6 +698,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7A9C0A012F3B4C5D6E7F0004 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.9.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7A9C0A012F3B4C5D6E7F0003 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7A9C0A012F3B4C5D6E7F0004 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6294280F1D387503001BD4E9 /* Project object */;
 }
