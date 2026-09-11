@@ -100,3 +100,6 @@ fastlane/test_output
 # AI tools
 .claude/
 .serena/
+
+# ローカル作業用（コミットしない）
+tasks/
