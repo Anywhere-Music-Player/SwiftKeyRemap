@@ -129,11 +129,18 @@ jobs:
 
           # 新しい item を channel の直後に入れるので、既存の item を書き換えずに新しい順が保たれる。
           pubdate="$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')"
+          # Sparkle のドキュメントは major.minor.patch 形式を推奨しているので、12.0 のような値には .0 を補う
           minimum="$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "build/⌘英かな.app/Contents/Info.plist")"
+          case "${minimum}" in
+            *.*.*) ;;
+            *.*) minimum="${minimum}.0" ;;
+            *) minimum="${minimum}.0.0" ;;
+          esac
 
           # sparkle:version は、インストール済みの CFBundleVersion と比べて新しいかを Sparkle が判定する値。
           # フィードにある最大値を超えていなければ、誰にも提示されないリリースになるので拒否する。
-          highest="$(grep -o 'sparkle:version="[^"]*"' feed/appcast.xml | cut -d'"' -f2 | sort -n | tail -1)"
+          # 初回リリースではフィードに item が無く grep が一致なしで終了する。set -e で止まらないよう空として扱う。
+          highest="$( { grep -o 'sparkle:version="[^"]*"' feed/appcast.xml || true; } | cut -d'"' -f2 | sort -n | tail -1)"
           if [ -n "${highest}" ] && [ "${BUILD}" -le "${highest}" ]; then
             echo "CFBundleVersion ${BUILD} is not above ${highest}, which the feed already carries" >&2
             exit 1
