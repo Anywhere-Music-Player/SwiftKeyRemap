@@ -1049,7 +1049,7 @@
                             <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SNT-SJ-fye">
                                 <rect key="frame" x="18" y="194" width="215" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <buttonCell key="cell" type="check" title="check for update when start" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="6Pk-W2-evg">
+                                <buttonCell key="cell" type="check" title="check for updates automatically" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="6Pk-W2-evg">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
@@ -1075,7 +1075,6 @@
                         <outlet property="lunchAtStartup" destination="a6E-DH-qqL" id="w9n-De-W85"/>
                         <outlet property="showIcon" destination="UcU-gG-BmS" id="GbK-wC-gej"/>
                         <outlet property="tableView" destination="pHp-lE-BfK" id="AvL-ae-1yN"/>
-                        <outlet property="updateButton" destination="jqL-vq-Vub" id="Lnc-fu-DVo"/>
                     </connections>
                 </viewController>
                 <customObject id="PRd-gs-VTn" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

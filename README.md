@@ -22,6 +22,16 @@ This is a fork of [iMasanari/cmd-eikana](https://github.com/iMasanari/cmd-eikana
 
 [GitHub Releases](https://github.com/dominion525/cmd-eikana/releases) からダウンロードしてください。
 
+## アップデート
+
+アプリ内で新しいバージョンの確認・ダウンロード・適用を行います（[Sparkle](https://sparkle-project.org) を使用）。
+
+- 既定では自動的に確認し、新しいバージョンがあればダイアログで案内します
+- 自動確認は設定画面の「アップデートを自動的に確認」で切り替えられます
+- 設定画面の「確認する」ボタンでいつでも手動で確認できます
+
+v2.4.2 以前のバージョンにはこの仕組みが入っていないため、一度 [GitHub Releases](https://github.com/dominion525/cmd-eikana/releases) からダウンロードして入れ替えてください。以降はアプリ内でアップデートできます。
+
 ## 使い方（初回起動時）
 
 ### 1. アプリを開く
