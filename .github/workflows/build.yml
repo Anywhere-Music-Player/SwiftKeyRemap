@@ -14,7 +14,10 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    # リリースビルド（release.yml）と同じ macOS 26 のイメージと Xcode で検証する
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
     steps:
       - uses: actions/checkout@v4
       - run: xcode-select -p
