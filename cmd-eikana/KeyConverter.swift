@@ -52,6 +52,12 @@ enum KeyConverter {
       flags: convertedFlags(eventFlags: shortcut.flags, mapping: mapping))
   }
 
+  /// メディアキーの種類（NX_KEYTYPE_*）を設定表で引くときの keyCode。オフセットを足した値が
+  /// keyCode の型に収まらなければ nil
+  static func mediaKeyMappingKeyCode(keyType: Int) -> CGKeyCode? {
+    return CGKeyCode(exactly: mediaKeyCodeOffset + keyType)
+  }
+
   /// flagsChanged イベントの keyCode と flags から、修飾キーの押下（true）か解放（false）かを決める。
   /// 修飾キーとして扱わないキーコードなら nil
   static func modifierKeyState(keyCode: CGKeyCode, flags: CGEventFlags) -> Bool? {

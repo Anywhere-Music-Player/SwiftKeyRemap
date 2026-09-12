@@ -169,6 +169,24 @@ struct KeyConverterTests {
         == .convert(keyCode: 102, flags: CGEventFlags(rawValue: 0)))
   }
 
+  // MARK: - mediaKeyMappingKeyCode
+
+  @Test func mediaKeyTypeZeroMapsToOffset() {
+    #expect(KeyConverter.mediaKeyMappingKeyCode(keyType: 0) == CGKeyCode(mediaKeyCodeOffset))
+  }
+
+  @Test func largestFittingMediaKeyTypeMapsToMaximumKeyCode() {
+    #expect(KeyConverter.mediaKeyMappingKeyCode(keyType: 65535 - mediaKeyCodeOffset) == 65535)
+  }
+
+  @Test func mediaKeyTypeBeyondRangeGivesNil() {
+    #expect(KeyConverter.mediaKeyMappingKeyCode(keyType: 65536 - mediaKeyCodeOffset) == nil)
+  }
+
+  @Test func negativeMediaKeyTypeBelowOffsetGivesNil() {
+    #expect(KeyConverter.mediaKeyMappingKeyCode(keyType: -mediaKeyCodeOffset - 1) == nil)
+  }
+
   // MARK: - modifierKeyState
 
   @Test func leftCommandWithCommandFlagIsDown() {

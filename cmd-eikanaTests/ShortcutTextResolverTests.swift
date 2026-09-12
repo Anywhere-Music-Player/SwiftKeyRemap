@@ -162,6 +162,20 @@ struct ShortcutTextResolverTests {
     #expect(ShortcutTextResolver.shortcut(fromSymbolicHotKeyParameters: parameters) == nil)
   }
 
+  @Test func maximumKeyCodeIsAccepted() {
+    let result = ShortcutTextResolver.shortcut(fromSymbolicHotKeyParameters: [65535, 65535, 0])
+    #expect(result?.keyCode == 65535)
+  }
+
+  @Test(arguments: [
+    [65535, -1, 0],
+    [65535, 65536, 0],
+    [65535, 49, -1],
+  ])
+  func outOfRangeParametersGiveNil(parameters: [Int]) {
+    #expect(ShortcutTextResolver.shortcut(fromSymbolicHotKeyParameters: parameters) == nil)
+  }
+
   // MARK: - apply
 
   @Test func applyToInputColumnReplacesInputOnly() {

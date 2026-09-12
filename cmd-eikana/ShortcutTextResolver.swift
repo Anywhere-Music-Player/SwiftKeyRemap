@@ -45,14 +45,16 @@ enum ShortcutTextResolver {
   }
 
   /// AppleSymbolicHotKeys の parameters（[文字コード, keyCode, 修飾フラグ]）をショートカットにする。
-  /// 要素が 3 つ未満なら nil
+  /// 要素が 3 つ未満、または keyCode や修飾フラグが型の範囲に収まらなければ nil
   static func shortcut(fromSymbolicHotKeyParameters parameters: [Int]) -> KeyboardShortcut? {
-    guard parameters.count >= 3 else {
+    guard parameters.count >= 3,
+      let keyCode = CGKeyCode(exactly: parameters[1]),
+      let flags = UInt64(exactly: parameters[2])
+    else {
       return nil
     }
 
-    return KeyboardShortcut(
-      keyCode: CGKeyCode(parameters[1]), flags: CGEventFlags(rawValue: UInt64(parameters[2])))
+    return KeyboardShortcut(keyCode: keyCode, flags: CGEventFlags(rawValue: flags))
   }
 
   /// 解決したショートカットを一覧の row 行に反映する。columnId が "input" なら入力側、それ以外は出力側

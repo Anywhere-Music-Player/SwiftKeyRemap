@@ -273,19 +273,22 @@ class KeyEvent: NSObject {
   }
 
   func mediaKeyDown(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
-    #if DEBUG
-      print(
-        KeyboardShortcut(keyCode: mappingKeyCode(of: mediaKeyEvent), flags: mediaKeyEvent.flags)
-          .toString())
-    #endif
-
     modifierTap.cancel()
+
+    // オフセットを足した keyCode が型に収まらないメディアキーは、設定の対象外として扱う
+    guard let mappingKeyCode = KeyConverter.mediaKeyMappingKeyCode(keyType: mediaKeyEvent.keyCode)
+    else {
+      return activeKeyTextField != nil ? nil : Unmanaged.passUnretained(mediaKeyEvent.event)
+    }
+
+    #if DEBUG
+      print(KeyboardShortcut(keyCode: mappingKeyCode, flags: mediaKeyEvent.flags).toString())
+    #endif
 
     if let keyTextField = activeKeyTextField {
       if keyTextField.isAllowModifierOnly {
         keyTextField.shortcut = KeyboardShortcut(
-          keyCode: mappingKeyCode(of: mediaKeyEvent),
-          flags: mediaKeyEvent.flags)
+          keyCode: mappingKeyCode, flags: mediaKeyEvent.flags)
         keyTextField.stringValue = keyTextField.shortcut!.toString()
       }
 
@@ -295,8 +298,7 @@ class KeyEvent: NSObject {
     // メディアキーは keyCode を持たないので、修飾フラグだけを照合に使い、設定表はオフセット付きのキーコードで引く
     let shortcut = KeyboardShortcut(keyCode: 0, flags: mediaKeyEvent.flags)
 
-    switch KeyConverter.resolve(
-      shortcut: shortcut, lookupKeyCode: mappingKeyCode(of: mediaKeyEvent), in: shortcutList)
+    switch KeyConverter.resolve(shortcut: shortcut, lookupKeyCode: mappingKeyCode, in: shortcutList)
     {
     case .passThrough:
       return Unmanaged.passUnretained(mediaKeyEvent.event)
@@ -312,11 +314,6 @@ class KeyEvent: NSObject {
 
   func mediaKeyUp(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
     return Unmanaged.passUnretained(mediaKeyEvent.event)
-  }
-
-  /// メディアキーを設定表で引くときの keyCode（NX_KEYTYPE_* にオフセットを足したもの）
-  private func mappingKeyCode(of mediaKeyEvent: MediaKeyEvent) -> CGKeyCode {
-    return CGKeyCode(mediaKeyCodeOffset + mediaKeyEvent.keyCode)
   }
 }
 
