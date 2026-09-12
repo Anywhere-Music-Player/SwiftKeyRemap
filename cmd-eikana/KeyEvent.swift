@@ -18,6 +18,7 @@ class KeyEvent: NSObject {
   var isExclusionApp = false
   let bundleId = Bundle.main.infoDictionary?["CFBundleIdentifier"] as! String
   var hasConvertedEventLog: KeyMapping?
+  var eventTap: CFMachPort?
 
   override init() {
     super.init()
@@ -153,6 +154,8 @@ class KeyEvent: NSObject {
       exit(1)
     }
 
+    self.eventTap = eventTap
+
     let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
 
     CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
@@ -162,6 +165,14 @@ class KeyEvent: NSObject {
   func eventCallback(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<
     CGEvent
   >? {
+    // タイムアウト等でシステムに無効化されたイベントタップを再有効化する
+    if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+      if let eventTap = self.eventTap {
+        CGEvent.tapEnable(tap: eventTap, enable: true)
+      }
+      return nil
+    }
+
     if isExclusionApp {
       return Unmanaged.passUnretained(event)
     }
