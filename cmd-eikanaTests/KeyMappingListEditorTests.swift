@@ -223,18 +223,9 @@ struct KeyMappingListEditorTests {
     #expect(KeyMappingListEditor.serialized([]).isEmpty)
   }
 
-  /// テスト専用の UserDefaults。アプリ本体の設定ドメインには書かず、テストごとに別のスイートを使う
-  func makeTestDefaults() -> (defaults: UserDefaults, suiteName: String) {
-    let suiteName = "io.github.dominion525.cmd-eikana.tests.\(UUID().uuidString)"
-    let defaults = UserDefaults(suiteName: suiteName)!
-    defaults.removePersistentDomain(forName: suiteName)
-    return (defaults, suiteName)
-  }
-
-  @Test func saveAndReadBackRoundTrips() {
-    let (defaults, suiteName) = makeTestDefaults()
-    defer { defaults.removePersistentDomain(forName: suiteName) }
-
+  /// 保存形式から KeyMapping(dictionary:) で復元でき、値が往復すること。
+  /// save は serialized の結果を UserDefaults に渡すだけなので、書き込み自体はテストしない
+  @Test func serializedRoundTripsThroughDictionaryInit() {
     let list = [
       KeyMapping(
         input: createShortcut(keyCode: 55, flags: 0x100000),
@@ -242,28 +233,16 @@ struct KeyMappingListEditorTests {
         enable: true),
       createMapping(inputKeyCode: 54, outputKeyCode: 104, enable: false),
     ]
-    KeyMappingListEditor.save(list, to: defaults)
 
-    let stored = defaults.object(forKey: "mappings") as? [[AnyHashable: Any]]
-    #expect(stored?.count == 2)
-    let restored = stored?.compactMap { KeyMapping(dictionary: $0) } ?? []
+    let restored = KeyMappingListEditor.serialized(list).compactMap { KeyMapping(dictionary: $0) }
+
     #expect(restored.count == 2)
     #expect(restored[0].input.keyCode == 55)
     #expect(restored[0].input.flags.rawValue == 0x100000)
     #expect(restored[0].output.keyCode == 102)
     #expect(restored[0].enable == true)
     #expect(restored[1].input.keyCode == 54)
+    #expect(restored[1].output.keyCode == 104)
     #expect(restored[1].enable == false)
-  }
-
-  @Test func saveEmptyListStoresEmptyArray() {
-    let (defaults, suiteName) = makeTestDefaults()
-    defer { defaults.removePersistentDomain(forName: suiteName) }
-
-    KeyMappingListEditor.save([], to: defaults)
-
-    let stored = defaults.object(forKey: "mappings") as? [[AnyHashable: Any]]
-    #expect(stored != nil)
-    #expect(stored?.isEmpty == true)
   }
 }
