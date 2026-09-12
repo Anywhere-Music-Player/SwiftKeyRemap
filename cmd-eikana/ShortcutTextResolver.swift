@@ -44,11 +44,15 @@ enum ShortcutTextResolver {
     }
   }
 
+  /// システム設定でショートカットが未割り当てのとき、AppleSymbolicHotKeys の keyCode に入る値
+  static let unassignedSymbolicHotKeyKeyCode: CGKeyCode = 65535
+
   /// AppleSymbolicHotKeys の parameters（[文字コード, keyCode, 修飾フラグ]）をショートカットにする。
-  /// 要素が 3 つ未満、または keyCode や修飾フラグが型の範囲に収まらなければ nil
+  /// 要素が 3 つ未満、keyCode や修飾フラグが型の範囲に収まらない、または未割り当てなら nil
   static func shortcut(fromSymbolicHotKeyParameters parameters: [Int]) -> KeyboardShortcut? {
     guard parameters.count >= 3,
       let keyCode = CGKeyCode(exactly: parameters[1]),
+      keyCode != unassignedSymbolicHotKeyKeyCode,
       let flags = UInt64(exactly: parameters[2])
     else {
       return nil

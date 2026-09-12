@@ -162,9 +162,23 @@ struct ShortcutTextResolverTests {
     #expect(ShortcutTextResolver.shortcut(fromSymbolicHotKeyParameters: parameters) == nil)
   }
 
-  @Test func maximumKeyCodeIsAccepted() {
+  /// システム設定で未割り当てのときは keyCode に 65535 が入る（この形を実機で確認）
+  @Test func unassignedHotKeyGivesNil() {
     let result = ShortcutTextResolver.shortcut(fromSymbolicHotKeyParameters: [65535, 65535, 0])
-    #expect(result?.keyCode == 65535)
+    #expect(result == nil)
+  }
+
+  @Test func largestAssignableKeyCodeIsAccepted() {
+    let result = ShortcutTextResolver.shortcut(fromSymbolicHotKeyParameters: [65535, 65534, 0])
+    #expect(result?.keyCode == 65534)
+  }
+
+  @Test func unassignedHotKeyKeepsCurrentValue() {
+    let current = createShortcut(keyCode: 49, flags: 0x100000)
+    let result = ShortcutTextResolver.resolve(
+      text: "select the previous input source", current: current,
+      symbolicHotKeyParameters: hotKeys([65535, 65535, 0]))
+    #expect(result === current)
   }
 
   @Test(arguments: [
