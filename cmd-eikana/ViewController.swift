@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import Sparkle
 
 class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
   let userDefaults = UserDefaults.standard
@@ -14,7 +15,11 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
   @IBOutlet weak var showIcon: NSButton!
   @IBOutlet weak var lunchAtStartup: NSButton!
   @IBOutlet weak var checkUpdateAtlaunch: NSButton!
-  @IBOutlet weak var updateButton: NSButton!
+
+  // Sparkle の updater は AppDelegate が保持している
+  private var updater: SPUUpdater {
+    (NSApp.delegate as! AppDelegate).updaterController.updater
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -26,9 +31,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     lunchAtStartup.state = NSControl.StateValue(
       rawValue: userDefaults.integer(forKey: "lunchAtStartup"))
 
-    // GitHub Releases API対応済み
-    checkUpdateAtlaunch.state = NSControl.StateValue(
-      rawValue: userDefaults.integer(forKey: "checkUpdateAtlaunch") == 0 ? 0 : 1)
+    checkUpdateAtlaunch.state = updater.automaticallyChecksForUpdates ? .on : .off
   }
 
   override var representedObject: Any? {
@@ -46,33 +49,14 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     userDefaults.set(lunchAtStartup.state, forKey: "lunchAtStartup")
   }
   @IBAction func clickCheckUpdateAtlaunch(_ sender: AnyObject) {
-    userDefaults.set(checkUpdateAtlaunch.state, forKey: "checkUpdateAtlaunch")
+    updater.automaticallyChecksForUpdates = (checkUpdateAtlaunch.state == .on)
   }
   @IBAction func test(_ sender: Any) {
 
   }
 
+  // 結果（最新である・失敗した・更新がある）の表示は Sparkle の標準 UI が行う
   @IBAction func checkUpdateButton(_ sender: AnyObject) {
-    updateButton.isEnabled = false
-    checkUpdate({ (isNewVer: Bool?) in
-      self.updateButton.isEnabled = true
-      if isNewVer == nil {
-        let alert = NSAlert()
-
-        alert.messageText = "通信に失敗しました"
-        alert.informativeText = "時間をおいて試してください"
-
-        alert.runModal()
-      } else if isNewVer == false {
-        let alert = NSAlert()
-
-        alert.messageText = "最新バージョンです"
-        let version =
-          Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
-        alert.informativeText = "ver.\(version)"
-
-        alert.runModal()
-      }
-    })
+    updater.checkForUpdates()
   }
 }

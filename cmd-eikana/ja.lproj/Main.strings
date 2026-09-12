@@ -62,8 +62,8 @@
 /* Class = "NSMenuItem"; title = "About ⌘英かな"; ObjectID = "5kV-Vb-QxS"; */
 "5kV-Vb-QxS.title" = "About ⌘英かな";
 
-/* Class = "NSButtonCell"; title = "check for update when start"; ObjectID = "6Pk-W2-evg"; */
-"6Pk-W2-evg.title" = "起動時にアップデートを確認";
+/* Class = "NSButtonCell"; title = "check for updates automatically"; ObjectID = "6Pk-W2-evg"; */
+"6Pk-W2-evg.title" = "アップデートを自動的に確認";
 
 /* Class = "NSMenuItem"; title = "Redo"; ObjectID = "6dh-zS-Vam"; */
 "6dh-zS-Vam.title" = "Redo";
