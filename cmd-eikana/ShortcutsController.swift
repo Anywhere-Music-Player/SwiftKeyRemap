@@ -13,21 +13,17 @@ var shortcutList: [CGKeyCode: [KeyMapping]] = [:]
 var keyMappingList: [KeyMapping] = []
 
 func saveKeyMappings() {
-  UserDefaults.standard.set(keyMappingList.map { $0.toDictionary() }, forKey: "mappings")
+  KeyMappingListEditor.save(keyMappingList, to: UserDefaults.standard)
 }
 
 func keyMappingListToShortcutList() {
-  shortcutList = [:]
+  shortcutList = KeyMappingListEditor.shortcutTable(from: keyMappingList)
 
-  for val in keyMappingList where val.enable {
-    let key = val.input.keyCode
-
-    shortcutList[key, default: []].append(val)
-
-    #if DEBUG
-      print("\(key): \(val.input.toString()) => \(val.output.toString())")
-    #endif
-  }
+  #if DEBUG
+    for val in keyMappingList where val.enable {
+      print("\(val.input.keyCode): \(val.input.toString()) => \(val.output.toString())")
+    }
+  #endif
 }
 
 class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
@@ -89,19 +85,8 @@ class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewD
   @objc func remove(_ sender: MappingMenu) {
     activeKeyTextField?.blur()
 
-    switch sender.selectedItem!.title {
-    case "この項目を削除", "remove":
-      sender.remove()
-    case "最上部に移動", "move to the top":
-      sender.move(0)
-    case "1つ上に移動", "move one up":
-      sender.move(sender.row! - 1)
-    case "1つ下に移動", "move one down":
-      sender.move(sender.row! + 1)
-    case "最下部に移動", "move to bottom":
-      sender.move(keyMappingList.count - 1)
-    default:
-      break
+    if let operation = MappingMenuOperation(menuTitle: sender.selectedItem!.title) {
+      keyMappingList = KeyMappingListEditor.apply(operation, at: sender.row!, to: keyMappingList)
     }
 
     tableReload()
@@ -118,7 +103,7 @@ class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewD
   }
 
   @IBAction func addRow(_ sender: AnyObject) {
-    keyMappingList.append(KeyMapping())
+    keyMappingList = KeyMappingListEditor.adding(to: keyMappingList)
     tableReload()
   }
 }

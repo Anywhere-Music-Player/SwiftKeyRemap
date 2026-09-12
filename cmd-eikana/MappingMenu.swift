@@ -8,26 +8,7 @@
 
 import Cocoa
 
+/// キーリマップ一覧の各行に置く操作メニュー。操作の中身は ShortcutsController が KeyMappingListEditor で行う
 class MappingMenu: NSPopUpButton {
   var row: Int?
-
-  func move(_ targetIndex: Int) {
-    var index = targetIndex
-    if let row = self.row {
-      let keyMapping = keyMappingList[row]
-
-      if index < 0 {
-        index = 0
-      } else if index > keyMappingList.count - 1 {
-        index = keyMappingList.count - 1
-      }
-
-      keyMappingList.remove(at: row)
-      keyMappingList.insert(keyMapping, at: index)
-    }
-  }
-
-  func remove() {
-    keyMappingList.remove(at: self.row!)
-  }
 }
