@@ -86,12 +86,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // v2.0.xからの引き継ぎ
         for val in oneShotModifiersData {
           if let inputKeyCodeInt = val["input"] as? Int,
+            let inputKeyCode = CGKeyCode(exactly: inputKeyCodeInt),
             let outputDic = val["output"] as? [AnyHashable: Any],
             let output = KeyboardShortcut(dictionary: outputDic)
           {
             keyMappingList.append(
               KeyMapping(
-                input: KeyboardShortcut(keyCode: CGKeyCode(inputKeyCodeInt)),
+                input: KeyboardShortcut(keyCode: inputKeyCode),
                 output: output))
           }
         }
