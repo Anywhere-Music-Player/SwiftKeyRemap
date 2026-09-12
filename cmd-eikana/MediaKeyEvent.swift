@@ -28,11 +28,19 @@ class MediaKeyEvent: NSObject {
     }
 
     self.event = event
-    keyCode = (nsEvent.data1 & 0xffff_0000) >> 16
+    let parsed = MediaKeyEvent.parse(data1: nsEvent.data1)
+    keyCode = parsed.keyType
     flags = event.flags
-    keyDown = ((nsEvent.data1 & 0xff00) >> 8) == 0xa
+    keyDown = parsed.isKeyDown
 
     super.init()
+  }
+
+  /// NX_SYSDEFINED イベントの data1 から、メディアキーの種類（NX_KEYTYPE_*）と押下か解放かを取り出す
+  static func parse(data1: Int) -> (keyType: Int, isKeyDown: Bool) {
+    let keyType = (data1 & 0xffff_0000) >> 16
+    let isKeyDown = ((data1 & 0xff00) >> 8) == 0xa
+    return (keyType, isKeyDown)
   }
 }
 

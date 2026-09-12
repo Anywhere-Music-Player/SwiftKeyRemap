@@ -13,25 +13,17 @@ var shortcutList: [CGKeyCode: [KeyMapping]] = [:]
 var keyMappingList: [KeyMapping] = []
 
 func saveKeyMappings() {
-  UserDefaults.standard.set(keyMappingList.map { $0.toDictionary() }, forKey: "mappings")
+  KeyMappingListEditor.save(keyMappingList, to: UserDefaults.standard)
 }
 
 func keyMappingListToShortcutList() {
-  shortcutList = [:]
+  shortcutList = KeyMappingListEditor.shortcutTable(from: keyMappingList)
 
-  for val in keyMappingList where val.enable {
-    let key = val.input.keyCode
-
-    if shortcutList[key] == nil {
-      shortcutList[key] = []
+  #if DEBUG
+    for val in keyMappingList where val.enable {
+      print("\(val.input.keyCode): \(val.input.toString()) => \(val.output.toString())")
     }
-
-    shortcutList[key]?.append(val)
-
-    #if DEBUG
-      print("\(key): \(val.input.toString()) => \(val.output.toString())")
-    #endif
-  }
+  #endif
 }
 
 class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
@@ -50,7 +42,8 @@ class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewD
     let id = tableColumn!.identifier
 
     if let cell = tableView.makeView(withIdentifier: id, owner: nil) as? NSTableCellView {
-      if id.rawValue == "input" || id.rawValue == "output" {
+      switch id.rawValue {
+      case "input", "output":
         let value = id.rawValue == "input" ? keyMappingList[row].input : keyMappingList[row].output
 
         let textField = cell.subviews[0] as! KeyTextField
@@ -59,22 +52,25 @@ class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewD
         textField.shortcut = value
         textField.saveAddress = (row: row, id: id.rawValue)
         textField.isAllowModifierOnly = id.rawValue == "input"
-      }
-      if id.rawValue == "mapping-menu" {
+
+      case "mapping-menu":
         let button = cell.subviews[0] as! MappingMenu
 
         button.row = row
 
         button.target = self
         button.action = #selector(ShortcutsController.remove(_:))
-      }
-      if id.rawValue == "enable" {
+
+      case "enable":
         let button = cell.subviews[0] as! NSButton
 
         button.state = keyMappingList[row].enable ? .on : .off
         button.tag = row
         button.target = self
         button.action = #selector(ShortcutsController.toggleEnable(_:))
+
+      default:
+        break
       }
 
       return cell
@@ -83,31 +79,20 @@ class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewD
   }
   @objc func toggleEnable(_ sender: NSButton) {
     keyMappingList[sender.tag].enable.toggle()
-    tableRreload()
+    tableReload()
   }
 
   @objc func remove(_ sender: MappingMenu) {
     activeKeyTextField?.blur()
 
-    switch sender.selectedItem!.title {
-    case "この項目を削除", "remove":
-      sender.remove()
-    case "最上部に移動", "move to the top":
-      sender.move(0)
-    case "1つ上に移動", "move one up":
-      sender.move(sender.row! - 1)
-    case "1つ下に移動", "move one down":
-      sender.move(sender.row! + 1)
-    case "最下部に移動", "move to bottom":
-      sender.move(keyMappingList.count - 1)
-    default:
-      break
+    if let operation = MappingMenuOperation(menuTitle: sender.selectedItem!.title) {
+      keyMappingList = KeyMappingListEditor.apply(operation, at: sender.row!, to: keyMappingList)
     }
 
-    tableRreload()
+    tableReload()
   }
 
-  func tableRreload() {
+  func tableReload() {
     tableView.reloadData()
     keyMappingListToShortcutList()
     saveKeyMappings()
@@ -118,7 +103,7 @@ class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewD
   }
 
   @IBAction func addRow(_ sender: AnyObject) {
-    keyMappingList.append(KeyMapping())
-    tableRreload()
+    keyMappingList = KeyMappingListEditor.adding(to: keyMappingList)
+    tableReload()
   }
 }

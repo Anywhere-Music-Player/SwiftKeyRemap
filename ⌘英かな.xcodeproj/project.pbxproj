@@ -26,6 +26,9 @@
 		62D162E71D3B350B009C95B0 /* toggleLaunchAtStartup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D162E61D3B350B009C95B0 /* toggleLaunchAtStartup.swift */; };
 		62FE51611DC70C5B0037B8D1 /* ExclusionAppsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FE51601DC70C5B0037B8D1 /* ExclusionAppsController.swift */; };
 		62FE51631DC75ECE0037B8D1 /* AppData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FE51621DC75ECE0037B8D1 /* AppData.swift */; };
+		7A9C0A012F3B4C5D6E7F0011 /* KeyMappingListEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9C0A012F3B4C5D6E7F0010 /* KeyMappingListEditor.swift */; };
+		7A9C0A012F3B4C5D6E7F0013 /* ShortcutTextResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9C0A012F3B4C5D6E7F0012 /* ShortcutTextResolver.swift */; };
+		7A9C0A012F3B4C5D6E7F0015 /* KeyConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A9C0A012F3B4C5D6E7F0014 /* KeyConverter.swift */; };
 		7A9C0A012F3B4C5D6E7F0002 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 7A9C0A012F3B4C5D6E7F0003 /* Sparkle */; };
 		CE754CC52FBF9D8C009FEB47 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CE754CC42FBF9D8C009FEB47 /* AppIcon.icon */; };
 /* End PBXBuildFile section */
@@ -78,6 +81,9 @@
 		62D162E61D3B350B009C95B0 /* toggleLaunchAtStartup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = toggleLaunchAtStartup.swift; sourceTree = "<group>"; };
 		62FE51601DC70C5B0037B8D1 /* ExclusionAppsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExclusionAppsController.swift; sourceTree = "<group>"; };
 		62FE51621DC75ECE0037B8D1 /* AppData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppData.swift; sourceTree = "<group>"; };
+		7A9C0A012F3B4C5D6E7F0010 /* KeyMappingListEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyMappingListEditor.swift; sourceTree = "<group>"; };
+		7A9C0A012F3B4C5D6E7F0012 /* ShortcutTextResolver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShortcutTextResolver.swift; sourceTree = "<group>"; };
+		7A9C0A012F3B4C5D6E7F0014 /* KeyConverter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyConverter.swift; sourceTree = "<group>"; };
 		7472654B2EE2DEB600EA7BAD /* cmd-eikanaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "cmd-eikanaTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE754CC42FBF9D8C009FEB47 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -163,6 +169,9 @@
 				6242D4BB1DA2455D00CA80DD /* KeyboardShortcut.swift */,
 				624BF4C91DD182F500A70E2C /* MediaKeyEvent.swift */,
 				62FE51621DC75ECE0037B8D1 /* AppData.swift */,
+				7A9C0A012F3B4C5D6E7F0010 /* KeyMappingListEditor.swift */,
+				7A9C0A012F3B4C5D6E7F0012 /* ShortcutTextResolver.swift */,
+				7A9C0A012F3B4C5D6E7F0014 /* KeyConverter.swift */,
 				628908ED1DADB0B6008EF46A /* KeyMapping.swift */,
 				629428201D387503001BD4E9 /* Main.storyboard */,
 				623E2E061DA60DA800AF163C /* PreferenceWindowController.swift */,
@@ -337,6 +346,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				62FE51631DC75ECE0037B8D1 /* AppData.swift in Sources */,
+				7A9C0A012F3B4C5D6E7F0011 /* KeyMappingListEditor.swift in Sources */,
+				7A9C0A012F3B4C5D6E7F0013 /* ShortcutTextResolver.swift in Sources */,
+				7A9C0A012F3B4C5D6E7F0015 /* KeyConverter.swift in Sources */,
 				62BEA2A41DA739B6004409AE /* ShortcutsController.swift in Sources */,
 				624BF4CA1DD182F500A70E2C /* MediaKeyEvent.swift in Sources */,
 				627265F61D3CC84000703F85 /* KeyEvent.swift in Sources */,

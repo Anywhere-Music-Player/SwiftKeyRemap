@@ -14,10 +14,10 @@ var exclusionAppsList: [AppData] = []
 var exclusionAppsDict: [String: String] = [:]
 
 class KeyEvent: NSObject {
-  var keyCode: CGKeyCode?
+  /// 修飾キー単体押しの追跡
+  var modifierTap = ModifierTapTracker()
   var isExclusionApp = false
   let bundleId = Bundle.main.infoDictionary?["CFBundleIdentifier"] as! String
-  var hasConvertedEventLog: KeyMapping?
   var eventTap: CFMachPort?
 
   override init() {
@@ -101,11 +101,11 @@ class KeyEvent: NSObject {
     ]
 
     NSEvent.addGlobalMonitorForEvents(matching: nsEventMaskList) { _ in
-      self.keyCode = nil
+      self.modifierTap.cancel()
     }
 
     NSEvent.addLocalMonitorForEvents(matching: nsEventMaskList) { (event: NSEvent) -> NSEvent? in
-      self.keyCode = nil
+      self.modifierTap.cancel()
       return event
     }
 
@@ -113,13 +113,6 @@ class KeyEvent: NSObject {
       CGEventType.keyDown.rawValue,
       CGEventType.keyUp.rawValue,
       CGEventType.flagsChanged.rawValue,
-      //            CGEventType.leftMouseDown.rawValue,
-      //            CGEventType.leftMouseUp.rawValue,
-      //            CGEventType.rightMouseDown.rawValue,
-      //            CGEventType.rightMouseUp.rawValue,
-      //            CGEventType.otherMouseDown.rawValue,
-      //            CGEventType.otherMouseUp.rawValue,
-      //            CGEventType.scrollWheel.rawValue,
       UInt32(NX_SYSDEFINED),  // Media key Event
     ]
     var eventMask: UInt32 = 0
@@ -182,23 +175,22 @@ class KeyEvent: NSObject {
     }
 
     switch type {
-    case CGEventType.flagsChanged:
+    case .flagsChanged:
       let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
 
-      if modifierMasks[keyCode] == nil {
+      guard let isDown = KeyConverter.modifierKeyState(keyCode: keyCode, flags: event.flags) else {
         return Unmanaged.passUnretained(event)
       }
-      return event.flags.rawValue & modifierMasks[keyCode]!.rawValue != 0
-        ? modifierKeyDown(event) : modifierKeyUp(event)
+      return isDown ? modifierKeyDown(event) : modifierKeyUp(event)
 
-    case CGEventType.keyDown:
+    case .keyDown:
       return keyDown(event)
 
-    case CGEventType.keyUp:
+    case .keyUp:
       return keyUp(event)
 
     default:
-      self.keyCode = nil
+      modifierTap.cancel()
 
       return Unmanaged.passUnretained(event)
     }
@@ -206,11 +198,10 @@ class KeyEvent: NSObject {
 
   func keyDown(_ event: CGEvent) -> Unmanaged<CGEvent>? {
     #if DEBUG
-      // print("keyCode: \(KeyboardShortcut(event).keyCode)")
       print(KeyboardShortcut(event).toString())
     #endif
 
-    self.keyCode = nil
+    modifierTap.cancel()
 
     if let keyTextField = activeKeyTextField {
       keyTextField.shortcut = KeyboardShortcut(event)
@@ -219,27 +210,32 @@ class KeyEvent: NSObject {
       return nil
     }
 
-    if hasConvertedEvent(event) {
-      if let event = getConvertedEvent(event) {
-        return Unmanaged.passUnretained(event)
-      }
-      return nil
-    }
-
-    return Unmanaged.passUnretained(event)
+    return convertIfMapped(event)
   }
 
   func keyUp(_ event: CGEvent) -> Unmanaged<CGEvent>? {
-    self.keyCode = nil
+    modifierTap.cancel()
 
-    if hasConvertedEvent(event) {
-      if let event = getConvertedEvent(event) {
-        return Unmanaged.passUnretained(event)
-      }
+    return convertIfMapped(event)
+  }
+
+  /// 設定に一致すればイベントの keyCode と flags を変換先に書き換えて返す（Disable なら nil）。
+  /// 一致しなければ元のイベントをそのまま返す
+  private func convertIfMapped(_ event: CGEvent) -> Unmanaged<CGEvent>? {
+    let shortcut = KeyboardShortcut(event)
+
+    switch KeyConverter.resolve(
+      shortcut: shortcut, lookupKeyCode: shortcut.keyCode, in: shortcutList)
+    {
+    case .passThrough:
+      return Unmanaged.passUnretained(event)
+    case .disable:
       return nil
+    case .convert(let keyCode, let flags):
+      event.setIntegerValueField(.keyboardEventKeycode, value: Int64(keyCode))
+      event.flags = flags
+      return Unmanaged.passUnretained(event)
     }
-
-    return Unmanaged.passUnretained(event)
   }
 
   func modifierKeyDown(_ event: CGEvent) -> Unmanaged<CGEvent>? {
@@ -247,7 +243,7 @@ class KeyEvent: NSObject {
       print(KeyboardShortcut(event).toString())
     #endif
 
-    self.keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
+    modifierTap.modifierDown(CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode)))
 
     if let keyTextField = activeKeyTextField, keyTextField.isAllowModifierOnly {
       let shortcut = KeyboardShortcut(event)
@@ -259,121 +255,73 @@ class KeyEvent: NSObject {
     return Unmanaged.passUnretained(event)
   }
 
+  /// 修飾キーが単体で押されて離されたら、その設定に従ってキーを送る。元の flagsChanged イベントはそのまま通す
   func modifierKeyUp(_ event: CGEvent) -> Unmanaged<CGEvent>? {
-    if activeKeyTextField != nil {
-      self.keyCode = nil
-    } else if self.keyCode == CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode)) {
-      if let convertedEvent = getConvertedEvent(event) {
-        KeyboardShortcut(convertedEvent).postEvent()
+    let isTap = modifierTap.modifierUp(CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode)))
+
+    if activeKeyTextField == nil, isTap {
+      let shortcut = KeyboardShortcut(event)
+
+      if case .convert(let keyCode, let flags) = KeyConverter.resolve(
+        shortcut: shortcut, lookupKeyCode: shortcut.keyCode, in: shortcutList)
+      {
+        KeyboardShortcut(keyCode: keyCode, flags: flags).postEvent()
       }
     }
-
-    self.keyCode = nil
 
     return Unmanaged.passUnretained(event)
   }
 
   func mediaKeyDown(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
-    #if DEBUG
-      print(
-        KeyboardShortcut(
-          keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode), flags: mediaKeyEvent.flags
-        ).toString())
-    #endif
+    modifierTap.cancel()
 
-    self.keyCode = nil
+    // オフセットを足した keyCode が型に収まらないメディアキーは、設定の対象外として扱う
+    guard let mappingKeyCode = KeyConverter.mediaKeyMappingKeyCode(keyType: mediaKeyEvent.keyCode)
+    else {
+      return activeKeyTextField != nil ? nil : Unmanaged.passUnretained(mediaKeyEvent.event)
+    }
+
+    #if DEBUG
+      print(KeyboardShortcut(keyCode: mappingKeyCode, flags: mediaKeyEvent.flags).toString())
+    #endif
 
     if let keyTextField = activeKeyTextField {
       if keyTextField.isAllowModifierOnly {
         keyTextField.shortcut = KeyboardShortcut(
-          keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode),
-          flags: mediaKeyEvent.flags)
+          keyCode: mappingKeyCode, flags: mediaKeyEvent.flags)
         keyTextField.stringValue = keyTextField.shortcut!.toString()
       }
 
       return nil
     }
 
-    if hasConvertedEvent(mediaKeyEvent.event, keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode)) {
-      if let event = getConvertedEvent(
-        mediaKeyEvent.event, keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode))
-      {
-        print(KeyboardShortcut(event).toString())
+    // メディアキーは keyCode を持たないので、修飾フラグだけを照合に使い、設定表はオフセット付きのキーコードで引く
+    let shortcut = KeyboardShortcut(keyCode: 0, flags: mediaKeyEvent.flags)
 
-        print(event.type == CGEventType.keyDown)
-        event.post(tap: CGEventTapLocation.cghidEventTap)
-      }
+    switch KeyConverter.resolve(shortcut: shortcut, lookupKeyCode: mappingKeyCode, in: shortcutList)
+    {
+    case .passThrough:
+      return Unmanaged.passUnretained(mediaKeyEvent.event)
+    case .disable:
+      return nil
+    case .convert(let keyCode, let flags):
+      let keyDownEvent = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: true)!
+      keyDownEvent.flags = flags
+      keyDownEvent.post(tap: CGEventTapLocation.cghidEventTap)
       return nil
     }
-
-    return Unmanaged.passUnretained(mediaKeyEvent.event)
   }
 
   func mediaKeyUp(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
-    // if hasConvertedEvent(..., keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode)) {
-    //     if let event = getConvertedEvent(..., keyCode: CGKeyCode(1000 + Int(...))) {
-    //         event.post(tap: CGEventTapLocation.cghidEventTap)
-    //     }
-    //     return nil
-    // }
-
     return Unmanaged.passUnretained(mediaKeyEvent.event)
   }
-
-  func hasConvertedEvent(_ event: CGEvent, keyCode: CGKeyCode? = nil) -> Bool {
-    let shortcht =
-      event.type.rawValue == UInt32(NX_SYSDEFINED)
-      ? KeyboardShortcut(keyCode: 0, flags: MediaKeyEvent(event)!.flags) : KeyboardShortcut(event)
-
-    if let mappingList = shortcutList[keyCode ?? shortcht.keyCode] {
-      for mappings in mappingList where shortcht.isCover(mappings.input) {
-        hasConvertedEventLog = mappings
-        return true
-      }
-    }
-    hasConvertedEventLog = nil
-    return false
-  }
-  func getConvertedEvent(_ event: CGEvent, keyCode: CGKeyCode? = nil) -> CGEvent? {
-    var event = event
-
-    if event.type.rawValue == UInt32(NX_SYSDEFINED) {
-      let flags = MediaKeyEvent(event)!.flags
-      event = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true)!
-      event.flags = flags
-    }
-
-    let shortcht = KeyboardShortcut(event)
-
-    func getEvent(_ mappings: KeyMapping) -> CGEvent? {
-      if mappings.output.keyCode == 999 {
-        // 999 is Disable
-        return nil
-      }
-
-      event.setIntegerValueField(.keyboardEventKeycode, value: Int64(mappings.output.keyCode))
-      event.flags = CGEventFlags(
-        rawValue: (event.flags.rawValue & ~mappings.input.flags.rawValue)
-          | mappings.output.flags.rawValue
-      )
-
-      return event
-    }
-
-    if let mappingList = shortcutList[keyCode ?? shortcht.keyCode] {
-      if let mappings = hasConvertedEventLog,
-        shortcht.isCover(mappings.input)
-      {
-
-        return getEvent(mappings)
-      }
-      for mappings in mappingList where shortcht.isCover(mappings.input) {
-        return getEvent(mappings)
-      }
-    }
-    return nil
-  }
 }
+
+/// 出力側にこの keyCode を設定した項目は、入力キーを無効化する（何も送らない）
+let disableKeyCode: CGKeyCode = 999
+
+/// メディアキーは NX_KEYTYPE_* にこの値を足した keyCode で設定表と keyCodeDictionary を引く
+let mediaKeyCodeOffset = 1000
 
 let modifierMasks: [CGKeyCode: CGEventFlags] = [
   54: CGEventFlags.maskCommand,

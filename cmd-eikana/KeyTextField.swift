@@ -11,7 +11,7 @@ import Cocoa
 var activeKeyTextField: KeyTextField?
 
 class KeyTextField: NSComboBox {
-  /// Custom delegate with other methods than NSTextFieldDelegate.
+  /// このフィールドが表すショートカット。編集終了時に表示と keyMappingList へ反映される
   var shortcut: KeyboardShortcut?
   var saveAddress: (row: Int, id: String)?
   var isAllowModifierOnly = true
@@ -27,46 +27,16 @@ class KeyTextField: NSComboBox {
   override func textDidEndEditing(_ obj: Notification) {
     super.textDidEndEditing(obj)
 
-    switch self.stringValue {
-    case "英数":
-      shortcut = KeyboardShortcut(keyCode: 102)
-    case "かな":
-      shortcut = KeyboardShortcut(keyCode: 104)
-    case "⇧かな":
-      shortcut = KeyboardShortcut(keyCode: 104, flags: CGEventFlags.maskShift)
-    case "前の入力ソースを選択", "select the previous input source":
-      if let symbolichotkeys = UserDefaults(suiteName: "com.apple.symbolichotkeys.plist")?.object(
-        forKey: "AppleSymbolicHotKeys") as? NSDictionary,
-        let parameters = symbolichotkeys.value(forKeyPath: "60.value.parameters") as? [Int],
-        parameters.count >= 3
-      {
-        shortcut = KeyboardShortcut(
-          keyCode: CGKeyCode(parameters[1]), flags: CGEventFlags(rawValue: UInt64(parameters[2])))
-      }
-    case "入力メニューの次のソースを選択", "select next source in input menu":
-      if let symbolichotkeys = UserDefaults(suiteName: "com.apple.symbolichotkeys.plist")?.object(
-        forKey: "AppleSymbolicHotKeys") as? NSDictionary,
-        let parameters = symbolichotkeys.value(forKeyPath: "61.value.parameters") as? [Int],
-        parameters.count >= 3
-      {
-        shortcut = KeyboardShortcut(
-          keyCode: CGKeyCode(parameters[1]), flags: CGEventFlags(rawValue: UInt64(parameters[2])))
-      }
-    case "Disable":
-      shortcut = KeyboardShortcut(keyCode: CGKeyCode(999))
-    default:
-      break
-    }
+    shortcut = ShortcutTextResolver.resolve(
+      text: self.stringValue, current: shortcut,
+      symbolicHotKeyParameters: symbolicHotKeyParameters(id:))
 
     if let shortcut = shortcut {
       self.stringValue = shortcut.toString()
 
       if let saveAddress = saveAddress {
-        if saveAddress.id == "input" {
-          keyMappingList[saveAddress.row].input = shortcut
-        } else {
-          keyMappingList[saveAddress.row].output = shortcut
-        }
+        ShortcutTextResolver.apply(
+          shortcut, to: &keyMappingList, row: saveAddress.row, columnId: saveAddress.id)
         keyMappingListToShortcutList()
       }
     } else {
@@ -79,6 +49,20 @@ class KeyTextField: NSComboBox {
       activeKeyTextField = nil
     }
   }
+
+  /// システム設定の AppleSymbolicHotKeys から、id のショートカットの parameters を読む。
+  /// 設定が無いか形式が想定外なら nil
+  private func symbolicHotKeyParameters(id: Int) -> [Int]? {
+    guard
+      let symbolicHotKeys = UserDefaults(suiteName: "com.apple.symbolichotkeys.plist")?.object(
+        forKey: "AppleSymbolicHotKeys") as? NSDictionary
+    else {
+      return nil
+    }
+
+    return symbolicHotKeys.value(forKeyPath: "\(id).value.parameters") as? [Int]
+  }
+
   func blur() {
     self.window?.makeFirstResponder(nil)
     activeKeyTextField = nil

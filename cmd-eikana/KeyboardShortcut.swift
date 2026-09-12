@@ -148,7 +148,20 @@ class KeyboardShortcut: NSObject {
   }
 }
 
-let keyCodeDictionary: [CGKeyCode: String] = [
+/// keyCode から表示名を引く表。通常キーは regularKeyCodeNames、Disable とメディアキーは
+/// 値を定義している定数と mediaKeyDic から作る
+let keyCodeDictionary: [CGKeyCode: String] = {
+  var dictionary = regularKeyCodeNames
+
+  dictionary[disableKeyCode] = "Disable"
+  for (keyType, name) in mediaKeyDic {
+    dictionary[CGKeyCode(mediaKeyCodeOffset + Int(keyType))] = name
+  }
+
+  return dictionary
+}()
+
+private let regularKeyCodeNames: [CGKeyCode: String] = [
   0: "A",
   1: "S",
   2: "D",
@@ -274,29 +287,4 @@ let keyCodeDictionary: [CGKeyCode: String] = [
   144: "BRIGHTNESS_UP",
   145: "BRIGHTNESS_DOWN",
   160: "Expose_All",
-
-  // media key (bata)
-  999: "Disable",
-  1000 + UInt16(NX_KEYTYPE_SOUND_UP): "Sound_up",
-  1000 + UInt16(NX_KEYTYPE_SOUND_DOWN): "Sound_down",
-  1000 + UInt16(NX_KEYTYPE_BRIGHTNESS_UP): "Brightness_up",
-  1000 + UInt16(NX_KEYTYPE_BRIGHTNESS_DOWN): "Brightness_down",
-  1000 + UInt16(NX_KEYTYPE_CAPS_LOCK): "CapsLock",
-  1000 + UInt16(NX_KEYTYPE_HELP): "HELP",
-  1000 + UInt16(NX_POWER_KEY): "PowerKey",
-  1000 + UInt16(NX_KEYTYPE_MUTE): "mute",
-  1000 + UInt16(NX_KEYTYPE_NUM_LOCK): "NUM_LOCK",
-  1000 + UInt16(NX_KEYTYPE_CONTRAST_UP): "CONTRAST_UP",
-  1000 + UInt16(NX_KEYTYPE_CONTRAST_DOWN): "CONTRAST_DOWN",
-  1000 + UInt16(NX_KEYTYPE_LAUNCH_PANEL): "LAUNCH_PANEL",
-  1000 + UInt16(NX_KEYTYPE_EJECT): "EJECT",
-  1000 + UInt16(NX_KEYTYPE_VIDMIRROR): "VIDMIRROR",
-  1000 + UInt16(NX_KEYTYPE_PLAY): "Play",
-  1000 + UInt16(NX_KEYTYPE_NEXT): "NEXT",
-  1000 + UInt16(NX_KEYTYPE_PREVIOUS): "PREVIOUS",
-  1000 + UInt16(NX_KEYTYPE_FAST): "Fast",
-  1000 + UInt16(NX_KEYTYPE_REWIND): "Rewind",
-  1000 + UInt16(NX_KEYTYPE_ILLUMINATION_UP): "Illumination_up",
-  1000 + UInt16(NX_KEYTYPE_ILLUMINATION_DOWN): "Illumination_down",
-  1000 + UInt16(NX_KEYTYPE_ILLUMINATION_TOGGLE): "ILLUMINATION_TOGGLE",
 ]
