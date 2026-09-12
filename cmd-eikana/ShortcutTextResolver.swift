@@ -6,8 +6,13 @@
 //  Copyright (c) 2016 iMasanari
 //
 
+import Carbon.HIToolbox
 import CoreGraphics
 import Foundation
+
+/// JIS キーボードの英数キーとかなキーの keyCode
+let eisuKeyCode = CGKeyCode(kVK_JIS_Eisu)
+let kanaKeyCode = CGKeyCode(kVK_JIS_Kana)
 
 /// キー入力欄の文字列をショートカットに解決し、キーリマップ一覧へ反映する処理。
 /// UI とシステム設定の読み取りには依存せず、読み取りは関数として受け取る
