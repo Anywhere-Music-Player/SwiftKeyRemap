@@ -279,10 +279,10 @@ class KeyEvent: NSObject {
   func mediaKeyDown(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
     modifierTap.cancel()
 
-    // オフセットを足した keyCode が型に収まらないメディアキーは、設定の対象外として扱う
+    // オフセットを足した keyCode が型に収まらないメディアキーは、設定の対象外としてそのまま通す
     guard let mappingKeyCode = KeyConverter.mediaKeyMappingKeyCode(keyType: mediaKeyEvent.keyCode)
     else {
-      return activeKeyTextField != nil ? nil : Unmanaged.passUnretained(mediaKeyEvent.event)
+      return Unmanaged.passUnretained(mediaKeyEvent.event)
     }
 
     #if DEBUG
@@ -290,11 +290,13 @@ class KeyEvent: NSObject {
     #endif
 
     if let keyTextField = activeKeyTextField {
-      if keyTextField.isAllowModifierOnly {
-        keyTextField.shortcut = KeyboardShortcut(
-          keyCode: mappingKeyCode, flags: mediaKeyEvent.flags)
-        keyTextField.stringValue = keyTextField.shortcut!.toString()
+      // 出力欄はメディアキーを受け付けない（出力として送れないため）。記録しない操作は OS にそのまま通す
+      guard keyTextField.isAllowModifierOnly else {
+        return Unmanaged.passUnretained(mediaKeyEvent.event)
       }
+
+      keyTextField.shortcut = KeyboardShortcut(keyCode: mappingKeyCode, flags: mediaKeyEvent.flags)
+      keyTextField.stringValue = keyTextField.shortcut!.toString()
 
       return nil
     }
