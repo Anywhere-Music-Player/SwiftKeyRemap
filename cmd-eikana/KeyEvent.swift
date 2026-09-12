@@ -167,6 +167,8 @@ class KeyEvent: NSObject {
     }
 
     if isExclusionApp {
+      // 除外アプリでの操作も、修飾キー単体押しの追跡を取り消す対象
+      modifierTap.cancel()
       return Unmanaged.passUnretained(event)
     }
 
@@ -179,6 +181,8 @@ class KeyEvent: NSObject {
       let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
 
       guard let isDown = KeyConverter.modifierKeyState(keyCode: keyCode, flags: event.flags) else {
+        // 修飾キーとして扱わないキー（Globe キーなど）の flagsChanged も、他の操作として追跡を取り消す
+        modifierTap.cancel()
         return Unmanaged.passUnretained(event)
       }
       return isDown ? modifierKeyDown(event) : modifierKeyUp(event)
@@ -313,6 +317,8 @@ class KeyEvent: NSObject {
   }
 
   func mediaKeyUp(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
+    modifierTap.cancel()
+
     return Unmanaged.passUnretained(mediaKeyEvent.event)
   }
 }
