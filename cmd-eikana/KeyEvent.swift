@@ -25,6 +25,11 @@ class KeyEvent: NSObject {
   }
 
   func start() {
+    // 起動時点の最前面アプリで除外状態を決める。切り替え通知が来るまで判定されないと、除外アプリ上でも変換してしまう
+    if let frontmostApp = NSWorkspace.shared.frontmostApplication {
+      updateActiveApp(frontmostApp)
+    }
+
     NSWorkspace.shared.notificationCenter.addObserver(
       self,
       selector: #selector(KeyEvent.setActiveApp(_:)),
@@ -73,6 +78,11 @@ class KeyEvent: NSObject {
   @objc func setActiveApp(_ notification: NSNotification) {
     let app = notification.userInfo!["NSWorkspaceApplicationKey"] as! NSRunningApplication
 
+    updateActiveApp(app)
+  }
+
+  /// 最前面になったアプリに合わせて、除外状態と最近使ったアプリの一覧を更新する
+  private func updateActiveApp(_ app: NSRunningApplication) {
     if let name = app.localizedName, let id = app.bundleIdentifier {
       isExclusionApp = exclusionAppsDict[id] != nil
 
