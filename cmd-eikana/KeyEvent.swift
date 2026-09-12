@@ -113,13 +113,6 @@ class KeyEvent: NSObject {
       CGEventType.keyDown.rawValue,
       CGEventType.keyUp.rawValue,
       CGEventType.flagsChanged.rawValue,
-      //            CGEventType.leftMouseDown.rawValue,
-      //            CGEventType.leftMouseUp.rawValue,
-      //            CGEventType.rightMouseDown.rawValue,
-      //            CGEventType.rightMouseUp.rawValue,
-      //            CGEventType.otherMouseDown.rawValue,
-      //            CGEventType.otherMouseUp.rawValue,
-      //            CGEventType.scrollWheel.rawValue,
       UInt32(NX_SYSDEFINED),  // Media key Event
     ]
     var eventMask: UInt32 = 0
@@ -182,19 +175,19 @@ class KeyEvent: NSObject {
     }
 
     switch type {
-    case CGEventType.flagsChanged:
+    case .flagsChanged:
       let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
 
-      if modifierMasks[keyCode] == nil {
+      guard let modifierMask = modifierMasks[keyCode] else {
         return Unmanaged.passUnretained(event)
       }
-      return event.flags.rawValue & modifierMasks[keyCode]!.rawValue != 0
+      return event.flags.rawValue & modifierMask.rawValue != 0
         ? modifierKeyDown(event) : modifierKeyUp(event)
 
-    case CGEventType.keyDown:
+    case .keyDown:
       return keyDown(event)
 
-    case CGEventType.keyUp:
+    case .keyUp:
       return keyUp(event)
 
     default:
@@ -206,7 +199,6 @@ class KeyEvent: NSObject {
 
   func keyDown(_ event: CGEvent) -> Unmanaged<CGEvent>? {
     #if DEBUG
-      // print("keyCode: \(KeyboardShortcut(event).keyCode)")
       print(KeyboardShortcut(event).toString())
     #endif
 
@@ -219,19 +211,17 @@ class KeyEvent: NSObject {
       return nil
     }
 
-    if hasConvertedEvent(event) {
-      if let event = getConvertedEvent(event) {
-        return Unmanaged.passUnretained(event)
-      }
-      return nil
-    }
-
-    return Unmanaged.passUnretained(event)
+    return convertIfMapped(event)
   }
 
   func keyUp(_ event: CGEvent) -> Unmanaged<CGEvent>? {
     self.keyCode = nil
 
+    return convertIfMapped(event)
+  }
+
+  /// 設定に一致すれば変換後のイベント（Disable なら nil）を、一致しなければ元のイベントをそのまま返す
+  private func convertIfMapped(_ event: CGEvent) -> Unmanaged<CGEvent>? {
     if hasConvertedEvent(event) {
       if let event = getConvertedEvent(event) {
         return Unmanaged.passUnretained(event)
@@ -276,9 +266,8 @@ class KeyEvent: NSObject {
   func mediaKeyDown(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
     #if DEBUG
       print(
-        KeyboardShortcut(
-          keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode), flags: mediaKeyEvent.flags
-        ).toString())
+        KeyboardShortcut(keyCode: mappingKeyCode(of: mediaKeyEvent), flags: mediaKeyEvent.flags)
+          .toString())
     #endif
 
     self.keyCode = nil
@@ -286,7 +275,7 @@ class KeyEvent: NSObject {
     if let keyTextField = activeKeyTextField {
       if keyTextField.isAllowModifierOnly {
         keyTextField.shortcut = KeyboardShortcut(
-          keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode),
+          keyCode: mappingKeyCode(of: mediaKeyEvent),
           flags: mediaKeyEvent.flags)
         keyTextField.stringValue = keyTextField.shortcut!.toString()
       }
@@ -294,13 +283,10 @@ class KeyEvent: NSObject {
       return nil
     }
 
-    if hasConvertedEvent(mediaKeyEvent.event, keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode)) {
+    if hasConvertedEvent(mediaKeyEvent.event, keyCode: mappingKeyCode(of: mediaKeyEvent)) {
       if let event = getConvertedEvent(
-        mediaKeyEvent.event, keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode))
+        mediaKeyEvent.event, keyCode: mappingKeyCode(of: mediaKeyEvent))
       {
-        print(KeyboardShortcut(event).toString())
-
-        print(event.type == CGEventType.keyDown)
         event.post(tap: CGEventTapLocation.cghidEventTap)
       }
       return nil
@@ -310,30 +296,29 @@ class KeyEvent: NSObject {
   }
 
   func mediaKeyUp(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
-    // if hasConvertedEvent(..., keyCode: CGKeyCode(1000 + mediaKeyEvent.keyCode)) {
-    //     if let event = getConvertedEvent(..., keyCode: CGKeyCode(1000 + Int(...))) {
-    //         event.post(tap: CGEventTapLocation.cghidEventTap)
-    //     }
-    //     return nil
-    // }
-
     return Unmanaged.passUnretained(mediaKeyEvent.event)
   }
 
+  /// メディアキーを設定表で引くときの keyCode（NX_KEYTYPE_* にオフセットを足したもの）
+  private func mappingKeyCode(of mediaKeyEvent: MediaKeyEvent) -> CGKeyCode {
+    return CGKeyCode(mediaKeyCodeOffset + mediaKeyEvent.keyCode)
+  }
+
   func hasConvertedEvent(_ event: CGEvent, keyCode: CGKeyCode? = nil) -> Bool {
-    let shortcht =
+    let shortcut =
       event.type.rawValue == UInt32(NX_SYSDEFINED)
       ? KeyboardShortcut(keyCode: 0, flags: MediaKeyEvent(event)!.flags) : KeyboardShortcut(event)
 
-    if let mappingList = shortcutList[keyCode ?? shortcht.keyCode] {
-      for mappings in mappingList where shortcht.isCover(mappings.input) {
-        hasConvertedEventLog = mappings
-        return true
-      }
+    if let mappingList = shortcutList[keyCode ?? shortcut.keyCode],
+      let mapping = mappingList.first(where: { shortcut.isCover($0.input) })
+    {
+      hasConvertedEventLog = mapping
+      return true
     }
     hasConvertedEventLog = nil
     return false
   }
+
   func getConvertedEvent(_ event: CGEvent, keyCode: CGKeyCode? = nil) -> CGEvent? {
     var event = event
 
@@ -343,11 +328,10 @@ class KeyEvent: NSObject {
       event.flags = flags
     }
 
-    let shortcht = KeyboardShortcut(event)
+    let shortcut = KeyboardShortcut(event)
 
     func getEvent(_ mappings: KeyMapping) -> CGEvent? {
-      if mappings.output.keyCode == 999 {
-        // 999 is Disable
+      if mappings.output.keyCode == disableKeyCode {
         return nil
       }
 
@@ -360,20 +344,25 @@ class KeyEvent: NSObject {
       return event
     }
 
-    if let mappingList = shortcutList[keyCode ?? shortcht.keyCode] {
+    if let mappingList = shortcutList[keyCode ?? shortcut.keyCode] {
       if let mappings = hasConvertedEventLog,
-        shortcht.isCover(mappings.input)
+        shortcut.isCover(mappings.input)
       {
-
         return getEvent(mappings)
       }
-      for mappings in mappingList where shortcht.isCover(mappings.input) {
+      if let mappings = mappingList.first(where: { shortcut.isCover($0.input) }) {
         return getEvent(mappings)
       }
     }
     return nil
   }
 }
+
+/// 出力側にこの keyCode を設定した項目は、入力キーを無効化する（何も送らない）
+let disableKeyCode: CGKeyCode = 999
+
+/// メディアキーは NX_KEYTYPE_* にこの値を足した keyCode で設定表と keyCodeDictionary を引く
+let mediaKeyCodeOffset = 1000
 
 let modifierMasks: [CGKeyCode: CGEventFlags] = [
   54: CGEventFlags.maskCommand,
