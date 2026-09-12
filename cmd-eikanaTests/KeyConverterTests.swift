@@ -233,11 +233,19 @@ struct KeyConverterTests {
     #expect(tracker.modifierUp(55) == false)
   }
 
-  @Test func overlappingModifiersAreNotTaps() {
+  /// 修飾キーを重ねて押したとき、追跡されるのは最後に押したキーだけ（現状の挙動を固定）
+  @Test func lastPressedModifierIsTheTap() {
     var tracker = ModifierTapTracker()
     tracker.modifierDown(55)
     tracker.modifierDown(56)
     #expect(tracker.modifierUp(56) == true)
+  }
+
+  @Test func earlierPressedModifierIsNotTapAfterAnotherModifier() {
+    var tracker = ModifierTapTracker()
+    tracker.modifierDown(55)
+    tracker.modifierDown(56)
+    _ = tracker.modifierUp(56)
     #expect(tracker.modifierUp(55) == false)
   }
 
