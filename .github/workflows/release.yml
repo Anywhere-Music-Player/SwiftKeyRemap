@@ -9,8 +9,8 @@ permissions:
 
 jobs:
   release:
-    # macos-15 は arm64 イメージ。プロジェクトは arm64 専用ビルド。
-    runs-on: macos-15
+    # Icon Composer 形式のアイコンを Xcode 26 でコンパイルするため macOS 26 のイメージを使う。arm64 専用ビルド。
+    runs-on: macos-26
     timeout-minutes: 45
     env:
       # 開発に使っている Xcode に固定する。イメージからこの版が消えたら上げる。
