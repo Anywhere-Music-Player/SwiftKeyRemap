@@ -12,15 +12,25 @@ on:
       - 'docs/**'
       - '*.md'
 
+# リリースビルド（release.yml）と同じ macOS 26 のイメージと Xcode で検証する
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+
 jobs:
-  build:
-    # リリースビルド（release.yml）と同じ macOS 26 のイメージと Xcode で検証する
+  test:
     runs-on: macos-26
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
     steps:
       - uses: actions/checkout@v4
-      - run: xcode-select -p
-      - run: swift --version
-      - run: xcodebuild test -quiet -project "⌘英かな.xcodeproj" -scheme "⌘英かな" -destination 'platform=macOS' CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-      - run: xcodebuild -quiet -project "⌘英かな.xcodeproj" -scheme "⌘英かな" -configuration Release -arch arm64 build CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+      - name: Xcode の版を表示
+        run: xcodebuild -version
+      - name: テスト
+        run: xcodebuild test -quiet -project "⌘英かな.xcodeproj" -scheme "⌘英かな" -destination 'platform=macOS' CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode の版を表示
+        run: xcodebuild -version
+      - name: Release ビルド
+        run: xcodebuild -quiet -project "⌘英かな.xcodeproj" -scheme "⌘英かな" -configuration Release -arch arm64 build CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
