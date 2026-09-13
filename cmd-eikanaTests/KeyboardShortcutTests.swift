@@ -252,6 +252,17 @@ struct KeyboardShortcutTests {
     #expect(commandLShortcut.isCover(regularWithCommand) == false)
   }
 
+  @Test(arguments: [
+    Constants.maskShift, Constants.maskControl, Constants.maskAlternate,
+    Constants.maskSecondaryFn, Constants.maskAlphaShift,
+  ])
+  func isCoverFailsForEachMissingModifier(missing: UInt64) {
+    // 相手が持つ修飾キーを自分が 1 つでも欠いていれば false。各修飾キーの判定を個別に通す
+    let source = createShortcut(keyCode: 0, flags: Constants.maskCommand)
+    let target = createShortcut(keyCode: 0, flags: Constants.maskCommand | missing)
+    #expect(source.isCover(target) == false)
+  }
+
   // MARK: - 5. Reference Type Tests
 
   @Test func referenceTypeSemantics() {
