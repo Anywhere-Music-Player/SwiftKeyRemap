@@ -20,6 +20,17 @@ class KeyEvent: NSObject {
   let bundleId = Bundle.main.infoDictionary?["CFBundleIdentifier"] as! String
   var eventTap: CFMachPort?
 
+  /// 変換に使う設定表。既定はグローバルの shortcutList を読む。テストでは差し替える
+  var shortcutTable: () -> [CGKeyCode: [KeyMapping]] = { shortcutList }
+  /// 修飾キー単体押しの変換結果を OS に送る（keyDown と keyUp）。テストでは記録するだけの関数に差し替える
+  var postShortcut: (KeyboardShortcut) -> Void = { $0.postEvent() }
+  /// メディアキーの変換結果を OS に送る（keyDown のみ）。テストでは記録するだけの関数に差し替える
+  var postKeyDown: (CGKeyCode, CGEventFlags) -> Void = { keyCode, flags in
+    let keyDownEvent = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: true)!
+    keyDownEvent.flags = flags
+    keyDownEvent.post(tap: CGEventTapLocation.cghidEventTap)
+  }
+
   override init() {
     super.init()
   }
@@ -84,16 +95,12 @@ class KeyEvent: NSObject {
   /// 最前面になったアプリに合わせて、除外状態と最近使ったアプリの一覧を更新する
   private func updateActiveApp(_ app: NSRunningApplication) {
     if let name = app.localizedName, let id = app.bundleIdentifier {
-      isExclusionApp = exclusionAppsDict[id] != nil
+      let update = ActiveAppTracker.update(
+        recentApps: activeAppsList, activatedName: name, activatedId: id,
+        selfBundleId: bundleId, exclusionAppsDict: exclusionAppsDict)
 
-      if id != bundleId && !isExclusionApp {
-        activeAppsList = activeAppsList.filter { $0.id != id }
-        activeAppsList.insert(AppData(name: name, id: id), at: 0)
-
-        if activeAppsList.count > 10 {
-          activeAppsList.removeLast()
-        }
-      }
+      isExclusionApp = update.isExclusion
+      activeAppsList = update.recentApps
     }
   }
 
@@ -168,6 +175,11 @@ class KeyEvent: NSObject {
   func eventCallback(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<
     CGEvent
   >? {
+    return handle(type: type, event: event)
+  }
+
+  /// タップから受け取ったイベントを処理する。返したイベントが OS に渡り、nil なら捨てられる
+  func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
     // タイムアウト等でシステムに無効化されたイベントタップを再有効化する
     if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
       if let eventTap = self.eventTap {
@@ -239,7 +251,7 @@ class KeyEvent: NSObject {
     let shortcut = KeyboardShortcut(event)
 
     switch KeyConverter.resolve(
-      shortcut: shortcut, lookupKeyCode: shortcut.keyCode, in: shortcutList)
+      shortcut: shortcut, lookupKeyCode: shortcut.keyCode, in: shortcutTable())
     {
     case .passThrough:
       return Unmanaged.passUnretained(event)
@@ -277,9 +289,9 @@ class KeyEvent: NSObject {
       let shortcut = KeyboardShortcut(event)
 
       if case .convert(let keyCode, let flags) = KeyConverter.resolve(
-        shortcut: shortcut, lookupKeyCode: shortcut.keyCode, in: shortcutList)
+        shortcut: shortcut, lookupKeyCode: shortcut.keyCode, in: shortcutTable())
       {
-        KeyboardShortcut(keyCode: keyCode, flags: flags).postEvent()
+        postShortcut(KeyboardShortcut(keyCode: keyCode, flags: flags))
       }
     }
 
@@ -314,16 +326,15 @@ class KeyEvent: NSObject {
     // メディアキーは keyCode を持たないので、修飾フラグだけを照合に使い、設定表はオフセット付きのキーコードで引く
     let shortcut = KeyboardShortcut(keyCode: 0, flags: mediaKeyEvent.flags)
 
-    switch KeyConverter.resolve(shortcut: shortcut, lookupKeyCode: mappingKeyCode, in: shortcutList)
+    switch KeyConverter.resolve(
+      shortcut: shortcut, lookupKeyCode: mappingKeyCode, in: shortcutTable())
     {
     case .passThrough:
       return Unmanaged.passUnretained(mediaKeyEvent.event)
     case .disable:
       return nil
     case .convert(let keyCode, let flags):
-      let keyDownEvent = CGEvent(keyboardEventSource: nil, virtualKey: keyCode, keyDown: true)!
-      keyDownEvent.flags = flags
-      keyDownEvent.post(tap: CGEventTapLocation.cghidEventTap)
+      postKeyDown(keyCode, flags)
       return nil
     }
   }

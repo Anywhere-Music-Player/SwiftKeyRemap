@@ -10,7 +10,10 @@ import Cocoa
 import Sparkle
 
 class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
-  let userDefaults = UserDefaults.standard
+  /// 設定の保存先。テストでは記録するだけの UserDefaults に差し替える
+  var userDefaults = UserDefaults.standard
+  /// メニューバー項目の表示を切り替える。AppKit がその状態をアプリの設定に保存するので、テストでは記録するだけの関数に差し替える
+  var setStatusItemVisible: (Bool) -> Void = { statusItem.isVisible = $0 }
 
   @IBOutlet weak var showIcon: NSButton!
   @IBOutlet weak var lunchAtStartup: NSButton!
@@ -34,14 +37,8 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     checkUpdateAtlaunch.state = updater.automaticallyChecksForUpdates ? .on : .off
   }
 
-  override var representedObject: Any? {
-    didSet {
-      // Update the view, if already loaded.
-    }
-  }
-
   @IBAction func clickShowIcon(_ sender: AnyObject) {
-    statusItem.isVisible = (showIcon.state == NSControl.StateValue.on)
+    setStatusItemVisible(showIcon.state == NSControl.StateValue.on)
     userDefaults.set(showIcon.state, forKey: "showIcon")
   }
   @IBAction func clickLunchAtStartup(_ sender: AnyObject) {
@@ -51,10 +48,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
   @IBAction func clickCheckUpdateAtlaunch(_ sender: AnyObject) {
     updater.automaticallyChecksForUpdates = (checkUpdateAtlaunch.state == .on)
   }
-  @IBAction func test(_ sender: Any) {
-
-  }
-
   // 結果（最新である・失敗した・更新がある）の表示は Sparkle の標準 UI が行う
   @IBAction func checkUpdateButton(_ sender: AnyObject) {
     updater.checkForUpdates()

@@ -26,7 +26,11 @@ class KeyTextField: NSComboBox {
 
   override func textDidEndEditing(_ obj: Notification) {
     super.textDidEndEditing(obj)
+    commitEditedText()
+  }
 
+  /// 入力された文字列を解決して表示と keyMappingList に反映し、保存する
+  func commitEditedText() {
     shortcut = ShortcutTextResolver.resolve(
       text: self.stringValue, current: shortcut,
       symbolicHotKeyParameters: symbolicHotKeyParameters(id:))

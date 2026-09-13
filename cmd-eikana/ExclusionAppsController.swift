@@ -23,54 +23,42 @@ class ExclusionAppsController: NSViewController, NSTableViewDataSource, NSTableV
   }
 
   func numberOfRows(in tableView: NSTableView) -> Int {
-    return exclusionAppsList.count + activeAppsList.count
+    return ExclusionListEditor.rowCount(exclusion: exclusionAppsList, recent: activeAppsList)
   }
 
   func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int)
     -> Any?
   {
-    let id = tableColumn!.identifier
-
-    let isExclusion = row < exclusionAppsList.count
-
-    if id.rawValue == "checkbox" {
-      return isExclusion
+    guard
+      let entry = ExclusionListEditor.row(row, exclusion: exclusionAppsList, recent: activeAppsList)
+    else {
+      return nil
     }
 
-    let value = isExclusion ? exclusionAppsList[row] : activeAppsList[row - exclusionAppsList.count]
-
-    if id.rawValue == "appName" {
-      return value.name
+    switch tableColumn!.identifier.rawValue {
+    case "checkbox":
+      return entry.isExclusion
+    case "appName":
+      return entry.app.name
+    case "appId":
+      return entry.app.id
+    default:
+      return nil
     }
-    if id.rawValue == "appId" {
-      return value.id
-    }
-
-    return nil
   }
+
   func tableView(
     _ tableView: NSTableView, setObjectValue object: Any?, for tableColumn: NSTableColumn?, row: Int
   ) {
-    let id = tableColumn!.identifier
-    let isExclusion = row < exclusionAppsList.count
-
-    if id != NSUserInterfaceItemIdentifier(rawValue: "checkbox") {
+    if tableColumn!.identifier != NSUserInterfaceItemIdentifier(rawValue: "checkbox") {
       return
     }
 
-    if isExclusion {
-      let item = exclusionAppsList.remove(at: row)
-      activeAppsList.insert(item, at: 0)
-    } else {
-      let item = activeAppsList.remove(at: row - exclusionAppsList.count)
-      exclusionAppsList.append(item)
-    }
-
-    exclusionAppsDict = [:]
-
-    for val in exclusionAppsList {
-      exclusionAppsDict[val.id] = val.name
-    }
+    let lists = ExclusionListEditor.toggled(
+      row: row, exclusion: exclusionAppsList, recent: activeAppsList)
+    exclusionAppsList = lists.exclusion
+    activeAppsList = lists.recent
+    exclusionAppsDict = StartupSettings.exclusionAppsDict(exclusionAppsList)
 
     tableReload()
     saveExclusionApps()
@@ -81,6 +69,6 @@ class ExclusionAppsController: NSViewController, NSTableViewDataSource, NSTableV
   }
 
   func saveExclusionApps() {
-    UserDefaults.standard.set(exclusionAppsList.map { $0.toDictionary() }, forKey: "exclusionApps")
+    settingsDefaults.set(ExclusionListEditor.serialized(exclusionAppsList), forKey: "exclusionApps")
   }
 }
