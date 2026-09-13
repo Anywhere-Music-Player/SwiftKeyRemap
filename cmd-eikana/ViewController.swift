@@ -35,12 +35,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
     checkUpdateAtlaunch.state = updater.automaticallyChecksForUpdates ? .on : .off
   }
 
-  override var representedObject: Any? {
-    didSet {
-      // Update the view, if already loaded.
-    }
-  }
-
   @IBAction func clickShowIcon(_ sender: AnyObject) {
     statusItem.isVisible = (showIcon.state == NSControl.StateValue.on)
     userDefaults.set(showIcon.state, forKey: "showIcon")
@@ -52,10 +46,6 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
   @IBAction func clickCheckUpdateAtlaunch(_ sender: AnyObject) {
     updater.automaticallyChecksForUpdates = (checkUpdateAtlaunch.state == .on)
   }
-  @IBAction func test(_ sender: Any) {
-
-  }
-
   // 結果（最新である・失敗した・更新がある）の表示は Sparkle の標準 UI が行う
   @IBAction func checkUpdateButton(_ sender: AnyObject) {
     updater.checkForUpdates()

@@ -143,14 +143,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     preferenceWindowController.showAndActivate(self)
   }
 
-  @IBAction func launch(_ sender: NSButton) {
-    if sender.state.rawValue == 0 {
-      sender.state = NSControl.StateValue(rawValue: 1)
-    } else {
-      sender.state = NSControl.StateValue(rawValue: 0)
-    }
-  }
-
   @IBAction func restart(_ sender: NSButton) {
     let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
     let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
