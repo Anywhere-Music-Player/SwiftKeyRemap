@@ -10,7 +10,7 @@ import Testing
 
 /// キーリマップ一覧の画面の操作。グローバルの設定と保存先を退避して差し替えるので、
 /// 同じグローバルを触る ShortcutsControllerTests と同じ suite（直列実行）に置く
-extension ShortcutsControllerTests {
+extension GlobalStateTests.ShortcutsControllerTests {
 
   /// グローバルの設定と保存先を退避し、テスト用の一覧と記録用の保存先に差し替える
   @MainActor
