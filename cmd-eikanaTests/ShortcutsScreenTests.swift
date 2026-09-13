@@ -197,4 +197,61 @@ extension ShortcutsControllerTests {
     defer { fixture.restore() }
     #expect(fixture.controller.numberOfRows(in: fixture.controller.tableView) == 2)
   }
+
+  // MARK: - 入力欄の編集終了
+
+  @MainActor @Test func endingEditWithKnownTextAppliesToTheRow() {
+    let fixture = ScreenFixture(mappings: [createMapping(inputKeyCode: 55, outputKeyCode: 0)])
+    defer { fixture.restore() }
+    let field = KeyTextField(frame: .zero)
+    field.saveAddress = (row: 0, id: "output")
+    field.isAllowModifierOnly = false
+    field.stringValue = "英数"
+    activeKeyTextField = field
+
+    field.commitEditedText()
+
+    #expect(keyMappingList[0].output.keyCode == 102)
+    #expect(shortcutList[55]?.first?.output.keyCode == 102)
+    #expect(field.stringValue == "英数")
+    #expect(activeKeyTextField == nil)
+    #expect(fixture.savedMappings?.count == 1)
+  }
+
+  @MainActor @Test func endingEditWithUnknownTextKeepsTheCurrentShortcut() {
+    let fixture = ScreenFixture(mappings: [createMapping(inputKeyCode: 55, outputKeyCode: 102)])
+    defer { fixture.restore() }
+    let field = KeyTextField(frame: .zero)
+    field.saveAddress = (row: 0, id: "output")
+    field.shortcut = keyMappingList[0].output
+    field.stringValue = "foo"
+
+    field.commitEditedText()
+
+    #expect(keyMappingList[0].output.keyCode == 102)
+    #expect(field.stringValue == "英数")
+  }
+
+  @MainActor @Test func endingEditWithUnknownTextAndNoShortcutClearsTheField() {
+    let fixture = ScreenFixture(mappings: [createMapping(inputKeyCode: 55, outputKeyCode: 102)])
+    defer { fixture.restore() }
+    let field = KeyTextField(frame: .zero)
+    field.stringValue = "foo"
+
+    field.commitEditedText()
+
+    #expect(field.stringValue == "")
+    #expect(keyMappingList[0].output.keyCode == 102)
+  }
+
+  @MainActor @Test func blurClearsTheActiveTextField() {
+    let fixture = ScreenFixture(mappings: [])
+    defer { fixture.restore() }
+    let field = KeyTextField(frame: .zero)
+    activeKeyTextField = field
+
+    field.blur()
+
+    #expect(activeKeyTextField == nil)
+  }
 }
