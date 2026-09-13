@@ -84,16 +84,12 @@ class KeyEvent: NSObject {
   /// 最前面になったアプリに合わせて、除外状態と最近使ったアプリの一覧を更新する
   private func updateActiveApp(_ app: NSRunningApplication) {
     if let name = app.localizedName, let id = app.bundleIdentifier {
-      isExclusionApp = exclusionAppsDict[id] != nil
+      let update = ActiveAppTracker.update(
+        recentApps: activeAppsList, activatedName: name, activatedId: id,
+        selfBundleId: bundleId, exclusionAppsDict: exclusionAppsDict)
 
-      if id != bundleId && !isExclusionApp {
-        activeAppsList = activeAppsList.filter { $0.id != id }
-        activeAppsList.insert(AppData(name: name, id: id), at: 0)
-
-        if activeAppsList.count > 10 {
-          activeAppsList.removeLast()
-        }
-      }
+      isExclusionApp = update.isExclusion
+      activeAppsList = update.recentApps
     }
   }
 
