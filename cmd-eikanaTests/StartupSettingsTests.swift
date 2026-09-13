@@ -54,6 +54,12 @@ struct StartupSettingsTests {
     #expect(result == StartupSettings.LaunchAtStartup(enabled: false, isFirstLaunch: false))
   }
 
+  @Test func launchAtStartupWithNonScalarValueIsOffButNotFirstLaunch() {
+    // 数値でも文字列でもない保存値（配列や辞書）は、integer(forKey:) と同じく 0 扱い
+    let result = StartupSettings.launchAtStartup(saved: [1])
+    #expect(result == StartupSettings.LaunchAtStartup(enabled: false, isFirstLaunch: false))
+  }
+
   // MARK: - 旧設定「起動時にアップデートを確認」
 
   @Test func legacyUpdateCheckIsNilWhenNotSaved() {
