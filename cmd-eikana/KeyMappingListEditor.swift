@@ -9,31 +9,13 @@
 import CoreGraphics
 import Foundation
 
-/// キーリマップ一覧のメニューから選べる操作
-enum MappingMenuOperation {
-  case remove
-  case moveToTop
-  case moveUp
-  case moveDown
-  case moveToBottom
-
-  /// メニュー項目の表示文字列（英語と日本語）から操作を決める。該当しなければ nil
-  init?(menuTitle: String) {
-    switch menuTitle {
-    case "この項目を削除", "remove":
-      self = .remove
-    case "最上部に移動", "move to the top":
-      self = .moveToTop
-    case "1つ上に移動", "move one up":
-      self = .moveUp
-    case "1つ下に移動", "move one down":
-      self = .moveDown
-    case "最下部に移動", "move to bottom":
-      self = .moveToBottom
-    default:
-      return nil
-    }
-  }
+/// キーリマップ一覧の行メニューから選べる操作。rawValue は storyboard の各項目に付けた tag
+enum MappingMenuOperation: Int {
+  case moveToTop = 1
+  case moveUp = 2
+  case moveDown = 3
+  case moveToBottom = 4
+  case remove = 5
 }
 
 /// キーリマップ一覧に対する操作を、グローバル状態や UI に触らない関数として提供する。

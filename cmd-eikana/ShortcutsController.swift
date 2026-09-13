@@ -85,7 +85,7 @@ class ShortcutsController: NSViewController, NSTableViewDataSource, NSTableViewD
   @objc func remove(_ sender: MappingMenu) {
     activeKeyTextField?.blur()
 
-    if let operation = MappingMenuOperation(menuTitle: sender.selectedItem!.title) {
+    if let operation = MappingMenuOperation(rawValue: sender.selectedTag()) {
       keyMappingList = KeyMappingListEditor.apply(operation, at: sender.row!, to: keyMappingList)
     }
 

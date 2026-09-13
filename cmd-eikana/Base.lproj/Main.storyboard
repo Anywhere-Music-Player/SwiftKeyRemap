@@ -854,16 +854,16 @@
                                                                         <menu key="menu" id="BOb-Li-1q3">
                                                                             <items>
                                                                                 <menuItem title="…" state="on" hidden="YES" id="hM9-HT-fqx"/>
-                                                                                <menuItem title="move to the top" id="SPl-n7-KTj">
+                                                                                <menuItem title="move to the top" tag="1" id="SPl-n7-KTj">
                                                                                     <modifierMask key="keyEquivalentModifierMask"/>
                                                                                 </menuItem>
-                                                                                <menuItem title="move one up" id="5K6-xN-Jic"/>
-                                                                                <menuItem title="move one down" id="fY1-dw-1o1"/>
-                                                                                <menuItem title="move to bottom" id="EUh-qz-H2g">
+                                                                                <menuItem title="move one up" tag="2" id="5K6-xN-Jic"/>
+                                                                                <menuItem title="move one down" tag="3" id="fY1-dw-1o1"/>
+                                                                                <menuItem title="move to bottom" tag="4" id="EUh-qz-H2g">
                                                                                     <modifierMask key="keyEquivalentModifierMask"/>
                                                                                 </menuItem>
                                                                                 <menuItem isSeparatorItem="YES" id="VSb-Dd-g0X"/>
-                                                                                <menuItem title="remove" id="502-f2-l6k">
+                                                                                <menuItem title="remove" tag="5" id="502-f2-l6k">
                                                                                     <modifierMask key="keyEquivalentModifierMask"/>
                                                                                 </menuItem>
                                                                             </items>
