@@ -57,58 +57,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     updaterController.startUpdater()
 
     // 除外アプリ設定
-    if let exclusionAppsListData = userDefaults.object(forKey: "exclusionApps")
-      as? [[AnyHashable: Any]]
-    {
-      for val in exclusionAppsListData {
-        if let exclusionApps = AppData(dictionary: val) {
-          exclusionAppsList.append(exclusionApps)
-        }
-      }
+    exclusionAppsList = StartupSettings.exclusionApps(
+      from: userDefaults.object(forKey: "exclusionApps"))
+    exclusionAppsDict = StartupSettings.exclusionAppsDict(exclusionAppsList)
 
-      for val in exclusionAppsList {
-        exclusionAppsDict[val.id] = val.name
-      }
-    }
+    // ショートカット設定。保存が無いときは移行した設定か初期設定を保存しておく
+    let mappings = StartupSettings.mappings(
+      saved: userDefaults.object(forKey: "mappings"),
+      oneShotModifiers: userDefaults.object(forKey: "oneShotModifiers"))
+    keyMappingList = mappings.list
 
-    // ショートカット設定
-    if let keyMappingListData = userDefaults.object(forKey: "mappings") as? [[AnyHashable: Any]] {
-      for val in keyMappingListData {
-        if let mapping = KeyMapping(dictionary: val) {
-          keyMappingList.append(mapping)
-        }
-      }
-
-      keyMappingListToShortcutList()
-    } else {
-      if let oneShotModifiersData = userDefaults.object(forKey: "oneShotModifiers") as? [AnyObject]
-      {
-        // v2.0.xからの引き継ぎ
-        for val in oneShotModifiersData {
-          if let inputKeyCodeInt = val["input"] as? Int,
-            let inputKeyCode = CGKeyCode(exactly: inputKeyCodeInt),
-            let outputDic = val["output"] as? [AnyHashable: Any],
-            let output = KeyboardShortcut(dictionary: outputDic)
-          {
-            keyMappingList.append(
-              KeyMapping(
-                input: KeyboardShortcut(keyCode: inputKeyCode),
-                output: output))
-          }
-        }
-
-        userDefaults.removeObject(forKey: "oneShotModifiers")
-      } else {
-        // 初期設定（左右のコマンドキー単体で英数/かな）
-        keyMappingList = [
-          KeyMapping(input: KeyboardShortcut(keyCode: 55), output: KeyboardShortcut(keyCode: 102)),
-          KeyMapping(input: KeyboardShortcut(keyCode: 54), output: KeyboardShortcut(keyCode: 104)),
-        ]
-      }
-
+    switch mappings.source {
+    case .saved:
+      break
+    case .migratedFromOneShotModifiers:
+      userDefaults.removeObject(forKey: "oneShotModifiers")
       saveKeyMappings()
-      keyMappingListToShortcutList()
+    case .defaults:
+      saveKeyMappings()
     }
+
+    keyMappingListToShortcutList()
 
     ////////////////////////////
     // UIの初期化
