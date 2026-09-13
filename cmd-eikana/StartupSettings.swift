@@ -35,6 +35,42 @@ enum StartupSettings {
     let source: MappingsSource
   }
 
+  /// 「ログイン後にこのアプリを起動」の保存値の解釈
+  struct LaunchAtStartup: Equatable {
+    /// 自動起動がオンか
+    let enabled: Bool
+    /// 保存値が無い初回起動か。初回は既定でオンにして保存する
+    let isFirstLaunch: Bool
+  }
+
+  /// "lunchAtStartup" の保存値を解釈する。未保存なら初回起動としてオン、保存値は 1 ならオン
+  static func launchAtStartup(saved: Any?) -> LaunchAtStartup {
+    guard let saved = saved else {
+      return LaunchAtStartup(enabled: true, isFirstLaunch: true)
+    }
+
+    let value: Int
+    if let number = saved as? NSNumber {
+      value = number.intValue
+    } else if let text = saved as? String {
+      value = Int(text) ?? 0
+    } else {
+      value = 0
+    }
+
+    return LaunchAtStartup(enabled: value == 1, isFirstLaunch: false)
+  }
+
+  /// 旧設定「起動時にアップデートを確認」（"checkUpdateAtlaunch"）を Sparkle の自動確認設定へ引き継ぐ値。
+  /// 保存値が整数でなければ nil（引き継ぐものが無い）
+  static func legacyAutomaticUpdateCheck(saved: Any?) -> Bool? {
+    guard let value = saved as? Int else {
+      return nil
+    }
+
+    return value == 1
+  }
+
   /// "exclusionApps" の保存値から除外アプリの一覧を復元する。形式が合わない項目は捨て、配列でなければ空
   static func exclusionApps(from saved: Any?) -> [AppData] {
     guard let entries = saved as? [[AnyHashable: Any]] else {

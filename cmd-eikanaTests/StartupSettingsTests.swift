@@ -29,6 +29,47 @@ struct StartupSettingsTests {
     list.map { [$0.input.keyCode, $0.output.keyCode] }
   }
 
+  // MARK: - 自動起動の保存値
+
+  @Test func launchAtStartupWithoutSavedValueIsFirstLaunchAndEnabled() {
+    let result = StartupSettings.launchAtStartup(saved: nil)
+    #expect(result == StartupSettings.LaunchAtStartup(enabled: true, isFirstLaunch: true))
+  }
+
+  @Test(arguments: [(1, true), (0, false), (2, false), (-1, false)])
+  func launchAtStartupReadsSavedInteger(saved: Int, enabled: Bool) {
+    let result = StartupSettings.launchAtStartup(saved: saved)
+    #expect(result == StartupSettings.LaunchAtStartup(enabled: enabled, isFirstLaunch: false))
+  }
+
+  @Test func launchAtStartupTreatsBoolAndNumericStringLikeInteger() {
+    #expect(StartupSettings.launchAtStartup(saved: true).enabled == true)
+    #expect(StartupSettings.launchAtStartup(saved: false).enabled == false)
+    #expect(StartupSettings.launchAtStartup(saved: "1").enabled == true)
+    #expect(StartupSettings.launchAtStartup(saved: "0").enabled == false)
+  }
+
+  @Test func launchAtStartupWithUnreadableValueIsOffButNotFirstLaunch() {
+    let result = StartupSettings.launchAtStartup(saved: "foo")
+    #expect(result == StartupSettings.LaunchAtStartup(enabled: false, isFirstLaunch: false))
+  }
+
+  // MARK: - 旧設定「起動時にアップデートを確認」
+
+  @Test func legacyUpdateCheckIsNilWhenNotSaved() {
+    #expect(StartupSettings.legacyAutomaticUpdateCheck(saved: nil) == nil)
+  }
+
+  @Test(arguments: [(1, true), (0, false), (2, false)])
+  func legacyUpdateCheckIsTrueOnlyForOne(saved: Int, expected: Bool) {
+    #expect(StartupSettings.legacyAutomaticUpdateCheck(saved: saved) == expected)
+  }
+
+  @Test func legacyUpdateCheckIgnoresNonIntegerValues() {
+    #expect(StartupSettings.legacyAutomaticUpdateCheck(saved: "1") == nil)
+    #expect(StartupSettings.legacyAutomaticUpdateCheck(saved: 1.0) == nil)
+  }
+
   // MARK: - 除外アプリ
 
   @Test func exclusionAppsFromNilIsEmpty() {

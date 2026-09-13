@@ -31,8 +31,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     let userDefaults = UserDefaults.standard
 
-    // 「ログイン後にこのアプリを起動」
-    if userDefaults.object(forKey: "lunchAtStartup") == nil {
+    // 「ログイン後にこのアプリを起動」。初回起動は既定でオンにして保存する
+    let launchAtStartup = StartupSettings.launchAtStartup(
+      saved: userDefaults.object(forKey: "lunchAtStartup"))
+    if launchAtStartup.isFirstLaunch {
       setLaunchAtStartup(true)
       userDefaults.set(1, forKey: "lunchAtStartup")
     }
@@ -43,15 +45,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     if shouldReregisterLaunchAtStartup(
       lastVersion: lastVersion,
       currentVersion: currentVersion,
-      launchAtStartupEnabled: userDefaults.integer(forKey: "lunchAtStartup") == 1
+      launchAtStartupEnabled: launchAtStartup.enabled
     ) {
       setLaunchAtStartup(true)
     }
     userDefaults.set(currentVersion, forKey: "lastLaunchVersion")
 
     // 旧設定「起動時にアップデートを確認」を Sparkle の自動確認設定へ引き継ぐ（キーを消すので 1 度だけ走る）
-    if let legacyCheckUpdate = userDefaults.object(forKey: "checkUpdateAtlaunch") as? Int {
-      updaterController.updater.automaticallyChecksForUpdates = (legacyCheckUpdate == 1)
+    if let automaticallyChecks = StartupSettings.legacyAutomaticUpdateCheck(
+      saved: userDefaults.object(forKey: "checkUpdateAtlaunch"))
+    {
+      updaterController.updater.automaticallyChecksForUpdates = automaticallyChecks
       userDefaults.removeObject(forKey: "checkUpdateAtlaunch")
     }
     updaterController.startUpdater()
