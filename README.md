@@ -22,6 +22,12 @@ This is a fork of [iMasanari/cmd-eikana](https://github.com/iMasanari/cmd-eikana
 
 [GitHub Releases](https://github.com/dominion525/cmd-eikana/releases) からダウンロードしてください。
 
+Homebrew からも入れられます。
+
+```
+brew install --cask dominion525/tap/cmd-eikana
+```
+
 ## アップデート
 
 アプリ内で新しいバージョンの確認・ダウンロード・適用を行います（[Sparkle](https://sparkle-project.org) を使用）。

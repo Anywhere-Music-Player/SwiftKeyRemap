@@ -105,7 +105,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: gh release create "${GITHUB_REF_NAME}" "cmd-eikana-v${VERSION}-arm64.zip" "build/cmd-eikana-v${VERSION}-arm64.dmg" --generate-notes
 
-      # ここから先はリリースが存在した状態で動くので、失敗してもリリースは残り、フィードだけが遅れる。
+      # ここから先はリリースが存在した状態で動くので、失敗してもリリースは残り、フィードや cask だけが遅れる。
       - name: Check out the update feed
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -199,4 +199,43 @@ jobs:
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit -m "⌘英かな ${VERSION}"
+          git push
+
+      # トークンは tap だけに書ける fine-grained PAT。
+      - name: Check out the Homebrew tap
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: dominion525/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Update the Homebrew cask
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          CASK: tap/Casks/cmd-eikana.rb
+        run: |
+          set -euo pipefail
+
+          # 手元の zip はいまリリースに載せたものそのものなので、ダウンロードし直さない。
+          sha="$(shasum -a 256 "cmd-eikana-v${VERSION}-arm64.zip" | awk '{ print $1 }')"
+
+          # リリースごとに変わる 2 行だけを書き換える。それ以外は tap 側で保守する。
+          sed -i '' "s|^  version \".*\"|  version \"${VERSION}\"|" "${CASK}"
+          sed -i '' "s|^  sha256 \".*\"|  sha256 \"${sha}\"|" "${CASK}"
+
+          # 一致しない sed は何も変えずに成功するので、両方が書き換わったことを確かめる。
+          grep -qx "  version \"${VERSION}\"" "${CASK}" || { echo "version was not updated in ${CASK}" >&2; exit 1; }
+          grep -qx "  sha256 \"${sha}\"" "${CASK}" || { echo "sha256 was not updated in ${CASK}" >&2; exit 1; }
+
+          # 構文の通らない cask を push しない。tap 側のチェックは push 後に走るので、ここで止める。
+          brew style "${CASK}"
+
+          cd tap
+          if git diff --quiet; then
+            echo "The cask already points at ${VERSION}."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -am "cmd-eikana ${VERSION}"
           git push
