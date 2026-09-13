@@ -10,7 +10,8 @@ import Cocoa
 import Sparkle
 
 class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
-  let userDefaults = UserDefaults.standard
+  /// 設定の保存先。テストでは記録するだけの UserDefaults に差し替える
+  var userDefaults = UserDefaults.standard
 
   @IBOutlet weak var showIcon: NSButton!
   @IBOutlet weak var lunchAtStartup: NSButton!
