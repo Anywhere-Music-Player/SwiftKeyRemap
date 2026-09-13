@@ -1,10 +1,10 @@
 #!/bin/bash
-# アプリを Apple の公証サービスへ提出し、チケットをステープルする。
-# 使い方: Scripts/notarize.sh [app]   （既定: build/⌘英かな.app）
+# アプリまたはディスクイメージを Apple の公証サービスへ提出し、チケットをステープルする。
+# 使い方: Scripts/notarize.sh [対象]   （既定: build/⌘英かな.app）
 #
-# 公証サービスはバンドルではなく書庫を受け取るため、提出用に zip を作る。
-# チケットはアプリ本体にステープルされるので、この zip は提出専用。配布用の書庫は別途作る。
-# 先に build.sh を実行しておくこと。
+# 対象は .app バンドルか .dmg。公証サービスはバンドルではなく書庫を受け取るため、.app のときは提出用に zip を作る。
+# チケットはアプリ本体にステープルされるので、この zip は提出専用。配布用の書庫は別途作る。.dmg はそのまま提出する。
+# .app は先に build.sh を、.dmg は先に make-dmg.sh を実行しておくこと。
 #
 # 認証情報は環境変数で渡す:
 #   NOTARY_KEYCHAIN_PROFILE  `xcrun notarytool store-credentials` で保存したプロファイル名
@@ -14,18 +14,10 @@ set -euo pipefail
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET="${1:-${DIR}/build/⌘英かな.app}"
 
-if [ ! -d "${TARGET}" ]; then
-  echo "${TARGET} がありません。先に build.sh を実行してください。" >&2
+if [ ! -e "${TARGET}" ]; then
+  echo "${TARGET} がありません。.app なら build.sh、.dmg なら make-dmg.sh を先に実行してください。" >&2
   exit 1
 fi
-
-case "${TARGET}" in
-  *.app) ;;
-  *)
-    echo "対象は .app バンドルだけです: ${TARGET}" >&2
-    exit 1
-    ;;
-esac
 
 if [ -n "${NOTARY_KEYCHAIN_PROFILE:-}" ]; then
   CREDENTIALS=(--keychain-profile "${NOTARY_KEYCHAIN_PROFILE}")
@@ -36,11 +28,26 @@ else
   exit 1
 fi
 
-SUBMISSION="${DIR}/build/notarize/$(basename "${TARGET%.app}").zip"
-echo "==> archive for submission"
-mkdir -p "$(dirname "${SUBMISSION}")"
-rm -f "${SUBMISSION}"
-ditto -c -k --keepParent "${TARGET}" "${SUBMISSION}"
+case "${TARGET}" in
+  *.app)
+    SUBMISSION="${DIR}/build/notarize/$(basename "${TARGET%.app}").zip"
+    echo "==> archive for submission"
+    mkdir -p "$(dirname "${SUBMISSION}")"
+    rm -f "${SUBMISSION}"
+    ditto -c -k --keepParent "${TARGET}" "${SUBMISSION}"
+    # Gatekeeper がアプリを実行対象として評価する
+    ASSESS=(-t exec)
+    ;;
+  *.dmg)
+    SUBMISSION="${TARGET}"
+    # Gatekeeper がイメージを開く対象として、イメージ自身の署名で評価する
+    ASSESS=(-t open --context context:primary-signature)
+    ;;
+  *)
+    echo "対象は .app バンドルか .dmg だけです: ${TARGET}" >&2
+    exit 1
+    ;;
+esac
 
 echo "==> notarytool submit"
 xcrun notarytool submit "${SUBMISSION}" "${CREDENTIALS[@]}" --wait
@@ -48,7 +55,6 @@ xcrun notarytool submit "${SUBMISSION}" "${CREDENTIALS[@]}" --wait
 echo "==> stapler staple"
 xcrun stapler staple "${TARGET}"
 xcrun stapler validate "${TARGET}"
-# Gatekeeper がアプリを実行対象として評価する
-spctl -a -vvv -t exec "${TARGET}"
+spctl -a -vvv "${ASSESS[@]}" "${TARGET}"
 
 echo "==> done: ${TARGET}"

@@ -56,6 +56,12 @@ jobs:
           security list-keychain -d user -s "${keychain}" login.keychain-db
           rm -f "${certificate}"
 
+      # create-dmg がディスクイメージのウィンドウを整える。
+      - name: Install create-dmg
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: brew install create-dmg
+
       - name: Build
         run: ./build.sh
 
@@ -76,11 +82,28 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: ditto -c -k --keepParent "build/⌘英かな.app" "cmd-eikana-v${VERSION}-arm64.zip"
 
+      # ステープル済みのアプリから作るので、イメージから取り出したアプリもチケットを持つ。
+      # ダウンロードの隔離属性はイメージに付くので、イメージ自体にも下でチケットを付ける。
+      - name: Build the disk image
+        run: ./Scripts/make-dmg.sh
+
+      - name: Notarize the disk image
+        env:
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+          NOTARY_KEY_P8_BASE64: ${{ secrets.NOTARY_KEY_P8_BASE64 }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          key="${RUNNER_TEMP}/notary.p8"
+          echo -n "${NOTARY_KEY_P8_BASE64}" | base64 --decode > "${key}"
+          NOTARY_KEY_P8="${key}" ./Scripts/notarize.sh "build/cmd-eikana-v${VERSION}-arm64.dmg"
+          rm -f "${key}"
+
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
-        run: gh release create "${GITHUB_REF_NAME}" "cmd-eikana-v${VERSION}-arm64.zip" --generate-notes
+        run: gh release create "${GITHUB_REF_NAME}" "cmd-eikana-v${VERSION}-arm64.zip" "build/cmd-eikana-v${VERSION}-arm64.dmg" --generate-notes
 
       # ここから先はリリースが存在した状態で動くので、失敗してもリリースは残り、フィードだけが遅れる。
       - name: Check out the update feed
