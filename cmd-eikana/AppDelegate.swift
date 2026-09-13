@@ -178,13 +178,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
   }
 
+  /// 終了してから起動し直す。切り離したシェルがこのプロセスの終了を待ってから open するので、
+  /// 起動中のアプリの再オープン扱いになったり、新旧のプロセスが同時に存在したりしない
   @IBAction func restart(_ sender: NSButton) {
-    let url = URL(fileURLWithPath: Bundle.main.resourcePath!)
-    let path = url.deletingLastPathComponent().deletingLastPathComponent().absoluteString
-    let task = Process()
-    task.launchPath = "/usr/bin/open"
-    task.arguments = [path]
-    task.launch()
+    let script =
+      "while kill -0 \(ProcessInfo.processInfo.processIdentifier) 2>/dev/null; do sleep 0.1; done; /usr/bin/open \"$0\""
+    let relauncher = Process()
+    relauncher.executableURL = URL(fileURLWithPath: "/bin/sh")
+    relauncher.arguments = ["-c", script, Bundle.main.bundlePath]
+    try? relauncher.run()
     NSApplication.shared.terminate(self)
   }
 
