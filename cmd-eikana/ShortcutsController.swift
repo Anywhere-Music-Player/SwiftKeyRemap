@@ -12,8 +12,11 @@ var shortcutList: [CGKeyCode: [KeyMapping]] = [:]
 
 var keyMappingList: [KeyMapping] = []
 
+/// 設定の保存先。テストでは記録するだけの UserDefaults に差し替える
+var settingsDefaults = UserDefaults.standard
+
 func saveKeyMappings() {
-  KeyMappingListEditor.save(keyMappingList, to: UserDefaults.standard)
+  KeyMappingListEditor.save(keyMappingList, to: settingsDefaults)
 }
 
 func keyMappingListToShortcutList() {

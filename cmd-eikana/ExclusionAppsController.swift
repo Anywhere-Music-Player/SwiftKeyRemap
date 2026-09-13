@@ -69,7 +69,6 @@ class ExclusionAppsController: NSViewController, NSTableViewDataSource, NSTableV
   }
 
   func saveExclusionApps() {
-    UserDefaults.standard.set(
-      ExclusionListEditor.serialized(exclusionAppsList), forKey: "exclusionApps")
+    settingsDefaults.set(ExclusionListEditor.serialized(exclusionAppsList), forKey: "exclusionApps")
   }
 }
