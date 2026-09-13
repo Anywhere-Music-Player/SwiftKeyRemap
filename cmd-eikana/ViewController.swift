@@ -12,6 +12,8 @@ import Sparkle
 class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
   /// 設定の保存先。テストでは記録するだけの UserDefaults に差し替える
   var userDefaults = UserDefaults.standard
+  /// メニューバー項目の表示を切り替える。AppKit がその状態をアプリの設定に保存するので、テストでは記録するだけの関数に差し替える
+  var setStatusItemVisible: (Bool) -> Void = { statusItem.isVisible = $0 }
 
   @IBOutlet weak var showIcon: NSButton!
   @IBOutlet weak var lunchAtStartup: NSButton!
@@ -36,7 +38,7 @@ class ViewController: NSViewController, NSTableViewDataSource, NSTableViewDelega
   }
 
   @IBAction func clickShowIcon(_ sender: AnyObject) {
-    statusItem.isVisible = (showIcon.state == NSControl.StateValue.on)
+    setStatusItemVisible(showIcon.state == NSControl.StateValue.on)
     userDefaults.set(showIcon.state, forKey: "showIcon")
   }
   @IBAction func clickLunchAtStartup(_ sender: AnyObject) {

@@ -15,24 +15,27 @@ extension GlobalStateTests {
     @MainActor @Test func showIconCheckboxTogglesTheStatusItemAndSaves() {
       let controller = PreferenceScreens.setting
       let defaults = RecordingDefaults(suiteName: nil)!
+      var visibility: [Bool] = []
       let originalDefaults = controller.userDefaults
-      let originalVisible = statusItem.isVisible
+      let originalSetVisible = controller.setStatusItemVisible
       let originalState = controller.showIcon.state
       defer {
         controller.userDefaults = originalDefaults
-        statusItem.isVisible = originalVisible
+        controller.setStatusItemVisible = originalSetVisible
         controller.showIcon.state = originalState
       }
       controller.userDefaults = defaults
+      controller.setStatusItemVisible = { visibility.append($0) }
 
       controller.showIcon.state = .off
       controller.clickShowIcon(controller.showIcon)
-      #expect(statusItem.isVisible == false)
+      #expect(visibility == [false])
       #expect((defaults.lastValue(forKey: "showIcon") as? NSControl.StateValue) == .off)
 
       controller.showIcon.state = .on
       controller.clickShowIcon(controller.showIcon)
-      #expect(statusItem.isVisible == true)
+      #expect(visibility == [false, true])
+      #expect((defaults.lastValue(forKey: "showIcon") as? NSControl.StateValue) == .on)
       #expect(defaults.recorded.count == 2)
     }
 
