@@ -61,5 +61,61 @@ extension GlobalStateTests {
         with: .leftMouseDown, location: .zero, modifierFlags: [], timestamp: 0, windowNumber: 0,
         context: nil, eventNumber: 0, clickCount: 1, pressure: 1)!
     }
+
+    // MARK: - アプリ切り替え通知
+
+    /// グローバルの一覧と除外辞書を退避し、テスト後に戻す
+    final class Lists {
+      private let originalRecent = activeAppsList
+      private let originalDict = exclusionAppsDict
+
+      init(exclusion: [String: String]) {
+        activeAppsList = []
+        exclusionAppsDict = exclusion
+      }
+
+      func restore() {
+        activeAppsList = originalRecent
+        exclusionAppsDict = originalDict
+      }
+    }
+
+    /// 自分以外で bundle ID を持つ動作中のアプリ（Finder など）
+    var otherApp: NSRunningApplication? {
+      NSWorkspace.shared.runningApplications.first {
+        $0.bundleIdentifier != nil && $0.bundleIdentifier != Bundle.main.bundleIdentifier
+          && $0.localizedName != nil
+      }
+    }
+
+    func notification(for app: NSRunningApplication) -> NSNotification {
+      NSNotification(
+        name: NSWorkspace.didActivateApplicationNotification, object: nil,
+        userInfo: [NSWorkspace.applicationUserInfoKey: app])
+    }
+
+    @Test func activationNotificationAddsTheAppToRecentList() throws {
+      let app = try #require(otherApp)
+      let lists = Lists(exclusion: [:])
+      defer { lists.restore() }
+      let keyEvent = KeyEvent()
+
+      keyEvent.setActiveApp(notification(for: app))
+
+      #expect(keyEvent.isExclusionApp == false)
+      #expect(activeAppsList.first?.id == app.bundleIdentifier)
+    }
+
+    @Test func activationNotificationOfExclusionAppSetsTheFlag() throws {
+      let app = try #require(otherApp)
+      let lists = Lists(exclusion: [app.bundleIdentifier!: app.localizedName!])
+      defer { lists.restore() }
+      let keyEvent = KeyEvent()
+
+      keyEvent.setActiveApp(notification(for: app))
+
+      #expect(keyEvent.isExclusionApp == true)
+      #expect(activeAppsList.isEmpty)
+    }
   }
 }
