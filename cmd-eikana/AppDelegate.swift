@@ -86,12 +86,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // v2.0.xからの引き継ぎ
         for val in oneShotModifiersData {
           if let inputKeyCodeInt = val["input"] as? Int,
+            let inputKeyCode = CGKeyCode(exactly: inputKeyCodeInt),
             let outputDic = val["output"] as? [AnyHashable: Any],
             let output = KeyboardShortcut(dictionary: outputDic)
           {
             keyMappingList.append(
               KeyMapping(
-                input: KeyboardShortcut(keyCode: CGKeyCode(inputKeyCodeInt)),
+                input: KeyboardShortcut(keyCode: inputKeyCode),
                 output: output))
           }
         }
@@ -118,6 +119,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let menu = NSMenu()
     statusItem.button?.title = "⌘"
     statusItem.menu = menu
+    // 「メニューバーにアイコンを表示」の保存値を起動時に反映する（設定画面と同じく、未設定なら表示）
+    statusItem.isVisible = (userDefaults.object(forKey: "showIcon") as? Int ?? 1) == 1
 
     let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
 

@@ -61,6 +61,21 @@ struct KeyboardShortcutTests {
     #expect(shortcut == nil)
   }
 
+  @Test(arguments: [
+    ["keyCode": -1, "flags": 0],
+    ["keyCode": 65536, "flags": 0],
+    ["keyCode": 55, "flags": -1],
+  ])
+  func initFromOutOfRangeValuesGivesNil(dictionary: [String: Int]) {
+    let shortcut = KeyboardShortcut(dictionary: dictionary)
+    #expect(shortcut == nil)
+  }
+
+  @Test func initFromMaximumKeyCode() {
+    let shortcut = KeyboardShortcut(dictionary: ["keyCode": 65535, "flags": 0])
+    #expect(shortcut?.keyCode == 65535)
+  }
+
   @Test func initFromFlagsAsString() {
     // flagsが文字列の場合
     let dictionary: [AnyHashable: Any] = ["keyCode": 55, "flags": "0"]

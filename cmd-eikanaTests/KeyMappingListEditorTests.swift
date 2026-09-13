@@ -39,25 +39,22 @@ struct KeyMappingListEditorTests {
 
   // MARK: - MappingMenuOperation
 
+  /// storyboard の行メニューに付けた tag と操作の対応
   @Test(arguments: [
-    ("remove", MappingMenuOperation.remove),
-    ("この項目を削除", MappingMenuOperation.remove),
-    ("move to the top", MappingMenuOperation.moveToTop),
-    ("最上部に移動", MappingMenuOperation.moveToTop),
-    ("move one up", MappingMenuOperation.moveUp),
-    ("1つ上に移動", MappingMenuOperation.moveUp),
-    ("move one down", MappingMenuOperation.moveDown),
-    ("1つ下に移動", MappingMenuOperation.moveDown),
-    ("move to bottom", MappingMenuOperation.moveToBottom),
-    ("最下部に移動", MappingMenuOperation.moveToBottom),
+    (1, MappingMenuOperation.moveToTop),
+    (2, MappingMenuOperation.moveUp),
+    (3, MappingMenuOperation.moveDown),
+    (4, MappingMenuOperation.moveToBottom),
+    (5, MappingMenuOperation.remove),
   ])
-  func menuTitleResolvesToOperation(title: String, expected: MappingMenuOperation) {
-    #expect(MappingMenuOperation(menuTitle: title) == expected)
+  func menuTagResolvesToOperation(tag: Int, expected: MappingMenuOperation) {
+    #expect(MappingMenuOperation(rawValue: tag) == expected)
   }
 
-  @Test(arguments: ["…", "", "foo", "Remove", "削除"])
-  func unknownMenuTitleResolvesToNil(title: String) {
-    #expect(MappingMenuOperation(menuTitle: title) == nil)
+  /// 先頭の非表示項目「…」は tag 0 のまま
+  @Test(arguments: [0, -1, 6])
+  func unknownMenuTagResolvesToNil(tag: Int) {
+    #expect(MappingMenuOperation(rawValue: tag) == nil)
   }
 
   // MARK: - apply: remove

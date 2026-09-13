@@ -31,13 +31,15 @@ class KeyboardShortcut: NSObject {
 
     super.init()
   }
+  /// 保存形式から復元する。keyCode や flags が型の範囲に収まらない値なら nil
   init?(dictionary: [AnyHashable: Any]) {
     if let keyCodeInt = dictionary["keyCode"] as? Int,
-      let eventFlagsInt = dictionary["flags"] as? Int
+      let eventFlagsInt = dictionary["flags"] as? Int,
+      let keyCode = CGKeyCode(exactly: keyCodeInt),
+      let eventFlags = UInt64(exactly: eventFlagsInt)
     {
-
-      self.flags = CGEventFlags(rawValue: UInt64(eventFlagsInt))
-      self.keyCode = CGKeyCode(keyCodeInt)
+      self.flags = CGEventFlags(rawValue: eventFlags)
+      self.keyCode = keyCode
 
       super.init()
     } else {

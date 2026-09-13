@@ -25,6 +25,11 @@ class KeyEvent: NSObject {
   }
 
   func start() {
+    // 起動時点の最前面アプリで除外状態を決める。切り替え通知が来るまで判定されないと、除外アプリ上でも変換してしまう
+    if let frontmostApp = NSWorkspace.shared.frontmostApplication {
+      updateActiveApp(frontmostApp)
+    }
+
     NSWorkspace.shared.notificationCenter.addObserver(
       self,
       selector: #selector(KeyEvent.setActiveApp(_:)),
@@ -73,6 +78,11 @@ class KeyEvent: NSObject {
   @objc func setActiveApp(_ notification: NSNotification) {
     let app = notification.userInfo!["NSWorkspaceApplicationKey"] as! NSRunningApplication
 
+    updateActiveApp(app)
+  }
+
+  /// 最前面になったアプリに合わせて、除外状態と最近使ったアプリの一覧を更新する
+  private func updateActiveApp(_ app: NSRunningApplication) {
     if let name = app.localizedName, let id = app.bundleIdentifier {
       isExclusionApp = exclusionAppsDict[id] != nil
 
@@ -167,6 +177,8 @@ class KeyEvent: NSObject {
     }
 
     if isExclusionApp {
+      // 除外アプリでの操作も、修飾キー単体押しの追跡を取り消す対象
+      modifierTap.cancel()
       return Unmanaged.passUnretained(event)
     }
 
@@ -179,6 +191,8 @@ class KeyEvent: NSObject {
       let keyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
 
       guard let isDown = KeyConverter.modifierKeyState(keyCode: keyCode, flags: event.flags) else {
+        // 修飾キーとして扱わないキー（Globe キーなど）の flagsChanged も、他の操作として追跡を取り消す
+        modifierTap.cancel()
         return Unmanaged.passUnretained(event)
       }
       return isDown ? modifierKeyDown(event) : modifierKeyUp(event)
@@ -275,10 +289,10 @@ class KeyEvent: NSObject {
   func mediaKeyDown(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
     modifierTap.cancel()
 
-    // オフセットを足した keyCode が型に収まらないメディアキーは、設定の対象外として扱う
+    // オフセットを足した keyCode が型に収まらないメディアキーは、設定の対象外としてそのまま通す
     guard let mappingKeyCode = KeyConverter.mediaKeyMappingKeyCode(keyType: mediaKeyEvent.keyCode)
     else {
-      return activeKeyTextField != nil ? nil : Unmanaged.passUnretained(mediaKeyEvent.event)
+      return Unmanaged.passUnretained(mediaKeyEvent.event)
     }
 
     #if DEBUG
@@ -286,11 +300,13 @@ class KeyEvent: NSObject {
     #endif
 
     if let keyTextField = activeKeyTextField {
-      if keyTextField.isAllowModifierOnly {
-        keyTextField.shortcut = KeyboardShortcut(
-          keyCode: mappingKeyCode, flags: mediaKeyEvent.flags)
-        keyTextField.stringValue = keyTextField.shortcut!.toString()
+      // 出力欄はメディアキーを受け付けない（出力として送れないため）。記録しない操作は OS にそのまま通す
+      guard keyTextField.isAllowModifierOnly else {
+        return Unmanaged.passUnretained(mediaKeyEvent.event)
       }
+
+      keyTextField.shortcut = KeyboardShortcut(keyCode: mappingKeyCode, flags: mediaKeyEvent.flags)
+      keyTextField.stringValue = keyTextField.shortcut!.toString()
 
       return nil
     }
@@ -313,6 +329,8 @@ class KeyEvent: NSObject {
   }
 
   func mediaKeyUp(_ mediaKeyEvent: MediaKeyEvent) -> Unmanaged<CGEvent>? {
+    modifierTap.cancel()
+
     return Unmanaged.passUnretained(mediaKeyEvent.event)
   }
 }

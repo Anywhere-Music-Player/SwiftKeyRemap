@@ -3,7 +3,7 @@
 # 使い方: Scripts/make-release-notes.sh <tag> <output.html>
 #
 # 本文は実行時点の GitHub リリースが持っているもので、リリースページと同じ Markdown API で描画するので
-# 見た目が食い違わない。リリースワークフローが公開時に呼び、release-notes.yml が本文の編集のたびに呼び直す。
+# 見た目が食い違わない。先頭に版と公開日の見出しを付ける。リリースワークフローが公開時に呼び、release-notes.yml が本文の編集のたびに呼び直す。
 #
 # gh は GH_TOKEN のトークンで動く。
 set -euo pipefail
@@ -20,8 +20,11 @@ VERSION="${TAG#v}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "${WORK}"' EXIT
 
-gh release view "${TAG}" --json body --jq .body > "${WORK}/body.md"
+gh release view "${TAG}" --json body,publishedAt > "${WORK}/release.json"
+jq -r .body "${WORK}/release.json" > "${WORK}/body.md"
 body="$(gh api /markdown -f mode=gfm -F text=@"${WORK}/body.md")"
+# 公開日は日本時間の日付で出す。gmtime の月は 0 始まり
+published="$(jq -r '.publishedAt | fromdateiso8601 + 9 * 3600 | gmtime | "\(.[0]) 年 \(.[1] + 1) 月 \(.[2]) 日"' "${WORK}/release.json")"
 
 mkdir -p "$(dirname "${OUTPUT}")"
 {
@@ -34,6 +37,8 @@ mkdir -p "$(dirname "${OUTPUT}")"
   printf 'h1,h2,h3{line-height:1.3}img{max-width:100%%}'
   printf '@media(prefers-color-scheme:dark){body{background:#1d1d1f;color:#f5f5f7}'
   printf 'code,pre{background:#2c2c2e}}</style>\n'
+  # ページ単体で開いても、どの版のいつのノートか分かるように本文の先頭に置く
+  printf '<h1>⌘英かな %s</h1>\n<p>%s公開</p>\n' "${VERSION}" "${published}"
   printf '%s\n' "${body}"
 } > "${OUTPUT}"
 
