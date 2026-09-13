@@ -221,15 +221,6 @@ struct KeyMappingListEditorTests {
   }
 
   /// 保存形式から KeyMapping(dictionary:) で復元でき、値が往復すること。
-  /// set(_:forKey:) を記録するだけで、ファイルには何も書かない UserDefaults
-  final class RecordingDefaults: UserDefaults {
-    var recorded: [(key: String, value: Any?)] = []
-
-    override func set(_ value: Any?, forKey defaultName: String) {
-      recorded.append((defaultName, value))
-    }
-  }
-
   @Test func saveWritesSerializedListToMappingsKey() {
     let list = [createMapping(inputKeyCode: 55, outputKeyCode: 102)]
     let defaults = RecordingDefaults(suiteName: nil)!
