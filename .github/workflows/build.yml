@@ -46,8 +46,9 @@ jobs:
           app="${products}/⌘英かな.app/Contents/MacOS/⌘英かな.debug.dylib"
           helper="${products}/cmd-eikana-helper.app/Contents/MacOS/cmd-eikana-helper.debug.dylib"
 
+          # GeneratedAssetSymbols.swift など、ビルド時に DerivedData に生成されるコードは集計しない
           export_summary() {
-            xcrun llvm-cov export -summary-only -instr-profile "${profdata}" "$@"
+            xcrun llvm-cov export -summary-only -instr-profile "${profdata}" -ignore-filename-regex '/DerivedData/' "$@"
           }
 
           # 集計 1 件を「名前、行・関数・リージョン・分岐それぞれの実行数と件数」のタブ区切りにする
