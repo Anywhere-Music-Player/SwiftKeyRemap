@@ -190,6 +190,12 @@ jobs:
             || { echo "the appcast did not gain an item for ${VERSION}" >&2; exit 1; }
           xmllint --noout feed/appcast.xml
 
+          # サイトのダウンロードボタンの版の文字も、フィードと同じコミットで今回の版にする。
+          # 一致しない sed は何も変えずに成功するので、書き換わったことを確かめる。
+          sed -i '' "s|Download ⌘英かな-v[0-9.]*|Download ⌘英かな-v${VERSION}|" feed/index.md
+          grep -qF "Download ⌘英かな-v${VERSION}" feed/index.md \
+            || { echo "the download button in index.md was not updated to ${VERSION}" >&2; exit 1; }
+
           cd feed
           git add -A
           if git diff --cached --quiet; then
