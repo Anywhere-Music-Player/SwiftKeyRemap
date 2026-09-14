@@ -2,7 +2,7 @@
 
 ![Build](https://github.com/dominion525/cmd-eikana/actions/workflows/build.yml/badge.svg)
 ![License](https://img.shields.io/github/license/dominion525/cmd-eikana)
-![Platform](https://img.shields.io/badge/platform-macOS%2012.0%2B-blue)
+![Platform](https://img.shields.io/badge/platform-macOS%2013.0%2B-blue)
 
 This is a fork of [iMasanari/cmd-eikana](https://github.com/iMasanari/cmd-eikana) for Apple Silicon Macs.
 
@@ -15,7 +15,7 @@ This is a fork of [iMasanari/cmd-eikana](https://github.com/iMasanari/cmd-eikana
 
 ### オリジナル版との違い
 - Apple Silicon (arm64) 専用ビルド
-- 最小動作要件: macOS 12.0 (Monterey) 以降
+- 最小動作要件: macOS 13.0 (Ventura) 以降
 - Bundle ID: `io.github.dominion525.cmd-eikana`
 
 ## ダウンロード
