@@ -37,8 +37,8 @@ jobs:
           profdata="$(find "${derived}/Build/ProfileData" -name Coverage.profdata -print -quit)"
           [ -n "${profdata}" ] || { echo "Coverage.profdata was not found under ${derived}" >&2; exit 1; }
           products="${derived}/Build/Products/Debug"
-          app="${products}/⌘英かな.app/Contents/MacOS/⌘英かな"
-          helper="${products}/cmd-eikana-helper.app/Contents/MacOS/cmd-eikana-helper"
+          app="${products}/⌘英かな.app/Contents/MacOS/⌘英かな.debug.dylib"
+          helper="${products}/cmd-eikana-helper.app/Contents/MacOS/cmd-eikana-helper.debug.dylib"
 
           # 割合は件数から計算し、小数点第 2 位まで出す。対象が 0 件の指標（Swift の分岐など）は - にする。
           row() {
