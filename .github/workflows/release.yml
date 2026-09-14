@@ -201,7 +201,7 @@ jobs:
               commit -m "⌘英かな ${VERSION}"
           git push
 
-  # 失敗しても homebrew-cask.yml の定期実行が最新リリースに追いつくので、リリースのやり直しは要らない。
+  # 失敗しても homebrew-cask.yml を手動実行すれば cask だけを更新できるので、リリースのやり直しは要らない。
   homebrew-cask:
     needs: release
     uses: ./.github/workflows/homebrew-cask.yml

@@ -1,15 +1,12 @@
 name: Homebrew cask
 
 # tap の cask を、このリポジトリの最新リリースに合わせる。版が同じなら何もしないので、何度走らせてもよい。
-# リリースワークフローの末尾から呼ばれるほか、毎日走る。リリース直後の更新が失敗しても、次の定期実行で追いつく。
+# リリースワークフローの末尾から呼ばれる。リリース直後の更新が失敗したら、手動実行でこのワークフローだけを走らせ直す。
 on:
   workflow_call:
     secrets:
       HOMEBREW_TAP_TOKEN:
         required: true
-  schedule:
-    # 毎日 03:23（日本時間）。毎時 0 分は GitHub 側の定期実行が集中して遅れやすいので避ける。
-    - cron: "23 18 * * *"
   workflow_dispatch:
 
 permissions:
