@@ -1,11 +1,11 @@
 #!/bin/bash
-# ⌘英かな.app を組み立てて署名する。
+# SwiftKeyRemap.app を組み立てて署名する。
 # 手順: xcodebuild で Release ビルド（Xcode 側では署名しない）→ build/ にコピー → 内側から順に署名。
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
-APP_NAME="⌘英かな"
+APP_NAME="SwiftKeyRemap"
 APP_DIR="${DIR}/build/${APP_NAME}.app"
 CONTENTS="${APP_DIR}/Contents"
 DERIVED_DATA="${DIR}/build/DerivedData"
@@ -47,15 +47,7 @@ if [ -d "${SPARKLE}" ]; then
   codesign "${SIGN[@]}" "${SPARKLE_VERSION}/Updater.app"
   codesign "${SIGN[@]}" "${SPARKLE}"
 else
-  echo "    Sparkle.framework がバンドル内に見つからないため、その署名を省略します" >&2
-fi
-
-# 自動起動用のヘルパーアプリもネストした実行ファイルなので、本体より先に署名する。
-HELPER="${CONTENTS}/Library/LoginItems/cmd-eikana-helper.app"
-if [ -d "${HELPER}" ]; then
-  codesign "${SIGN[@]}" "${HELPER}"
-else
-  echo "    cmd-eikana-helper.app がバンドル内に見つからないため、その署名を省略します" >&2
+  echo "    Sparkle.framework was not found in the app bundle; skipping framework signing." >&2
 fi
 
 codesign "${SIGN[@]}" "${APP_DIR}"

@@ -24,12 +24,12 @@ gh release view "${TAG}" --json body,publishedAt > "${WORK}/release.json"
 jq -r .body "${WORK}/release.json" > "${WORK}/body.md"
 body="$(gh api /markdown -f mode=gfm -F text=@"${WORK}/body.md")"
 # 公開日は日本時間の日付で出す。gmtime の月は 0 始まり
-published="$(jq -r '.publishedAt | fromdateiso8601 + 9 * 3600 | gmtime | "\(.[0]) 年 \(.[1] + 1) 月 \(.[2]) 日"' "${WORK}/release.json")"
+published="$(jq -r '.publishedAt | fromdateiso8601 | strftime("%B %d, %Y (UTC)")' "${WORK}/release.json")"
 
 mkdir -p "$(dirname "${OUTPUT}")"
 {
   printf '<!doctype html>\n<meta charset="utf-8">\n'
-  printf '<title>⌘英かな %s</title>\n' "${VERSION}"
+  printf '<title>SwiftKeyRemap %s</title>\n' "${VERSION}"
   printf '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
   printf '<style>body{font:14px/1.6 -apple-system,system-ui,sans-serif;margin:1em;color:#1d1d1f}'
   printf 'code,pre{font-family:ui-monospace,monospace;background:#f5f5f7;border-radius:4px}'
@@ -38,7 +38,7 @@ mkdir -p "$(dirname "${OUTPUT}")"
   printf '@media(prefers-color-scheme:dark){body{background:#1d1d1f;color:#f5f5f7}'
   printf 'code,pre{background:#2c2c2e}}</style>\n'
   # ページ単体で開いても、どの版のいつのノートか分かるように本文の先頭に置く
-  printf '<h1>⌘英かな %s</h1>\n<p>%s公開</p>\n' "${VERSION}" "${published}"
+  printf '<h1>SwiftKeyRemap %s</h1>\n<p>Published %s</p>\n' "${VERSION}" "${published}"
   printf '%s\n' "${body}"
 } > "${OUTPUT}"
 

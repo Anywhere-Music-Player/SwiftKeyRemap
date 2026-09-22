@@ -1,91 +1,103 @@
-# ⌘英かな (cmd-eikana) - Apple Silicon Fork
+# SwiftKeyRemap
 
-![Build](https://github.com/dominion525/cmd-eikana/actions/workflows/build.yml/badge.svg)
-![License](https://img.shields.io/github/license/dominion525/cmd-eikana)
-![Platform](https://img.shields.io/badge/platform-macOS%2013.0%2B-blue)
+[GitHub repository](https://github.com/Anywhere-Music-Player/SwiftKeyRemap)
 
-This is a fork of [iMasanari/cmd-eikana](https://github.com/iMasanari/cmd-eikana) for Apple Silicon Macs.
+A lightweight menu bar app for remapping keys and keyboard shortcuts on macOS.
+Assign different actions to the left and right Command keys, replace shortcuts,
+disable individual keys, and turn remapping off in selected apps.
 
-左右のコマンドキーを単体で押した時に英数/かなを切り替えるアプリです。
-設定をいじることでキーリマップアプリとしても利用できます。
+SwiftKeyRemap is based on [cmd-eikana](https://github.com/iMasanari/cmd-eikana)
+(originally named ⌘英かな), with Apple Silicon support from
+[dominion525's fork](https://github.com/dominion525/cmd-eikana).
 
-## Fork版について
+## Requirements
 
-このリポジトリは [iMasanari](https://github.com/iMasanari) 氏による [オリジナル版](https://github.com/iMasanari/cmd-eikana) のフォークです。
+- Apple Silicon Mac
+- macOS 14 or later with the current Xcode 27 recommended deployment target
+- Xcode 27 for local development
 
-### オリジナル版との違い
-- Apple Silicon (arm64) 専用ビルド
-- 最小動作要件: macOS 13.0 (Ventura) 以降
-- Bundle ID: `io.github.dominion525.cmd-eikana`
+The project uses `$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)` for the app and tests.
+Xcode 27 currently resolves this to macOS 14.0; a future Xcode version may change it.
 
-## ダウンロード
+## Getting started
 
-[GitHub Releases](https://github.com/dominion525/cmd-eikana/releases) からダウンロードしてください。
+1. Build the app and move **SwiftKeyRemap.app** to **Applications**.
+2. Open the app and allow **Accessibility** and **Input Monitoring** in
+   **System Settings → Privacy & Security** when prompted.
+3. Click the **⌘** menu bar icon and choose **Settings…**.
 
-Homebrew からも入れられます。
+The default mappings retain the original app's behavior: tapping left Command
+sends **Eisu** (the Japanese keyboard's alphanumeric key), and tapping right Command
+sends **Kana** (the Japanese input key). These are key events, not arbitrary
+English/Japanese input-source selectors. Change the mappings to suit your keyboard.
 
-```
-brew install --cask dominion525/tap/cmd-eikana
-```
+## Settings
 
-## アップデート
+- **Key Mappings:** Click **+** to add a mapping. Click an Input or Output field and
+  press a shortcut, or select a preset from its menu. Uncheck a row to pause it.
+  Use the **Actions** menu to reorder or remove mappings. **Disable** blocks an
+  input key. Input-source presets use the shortcuts configured in macOS.
+- **Excluded Apps:** Check apps where remapping should be disabled. The list
+  includes recently active apps; switch to an app to make it appear.
+- **General:** Show or hide the menu bar icon, manage launch at login, and check
+  GitHub releases. Reopen the app from Applications if its menu bar icon is hidden.
 
-アプリ内で新しいバージョンの確認・ダウンロード・適用を行います（[Sparkle](https://sparkle-project.org) を使用）。
+The interface is built with SwiftUI, including the menu bar menu and settings.
+Settings use a compact 640 × 440 window with a fixed size. Key mappings and app lists scroll
+when they contain more rows than the window can display.
 
-- 既定では自動的に確認し、新しいバージョンがあればダイアログで案内します
-- 自動確認は設定画面の「アップデートを自動的に確認」で切り替えられます
-- 設定画面の「確認する」ボタンでいつでも手動で確認できます
+## Launch at login
 
-v2.4.2 以前のバージョンにはこの仕組みが入っていないため、一度 [GitHub Releases](https://github.com/dominion525/cmd-eikana/releases) からダウンロードして入れ替えてください。以降はアプリ内でアップデートできます。
+SwiftKeyRemap registers the main app using `SMAppService.mainApp`. No separate startup
+helper is bundled. Enable **Launch at login** in General settings when you want
+it. The checkbox reflects the current system status rather than a saved preference.
+If macOS requires approval, enable SwiftKeyRemap under
+**System Settings → General → Login Items**. There is no legacy migration code.
 
-## 使い方（初回起動時）
+The existing bundle identifier (`io.github.dominion525.cmd-eikana`) is retained so
+saved mappings and excluded apps remain available after renaming the app. Quit the
+previous app before running SwiftKeyRemap; do not run both copies simultaneously.
 
-### 1. アプリを開く
+The source lives in `SwiftKeyRemap/`; the test target and folder are `SwiftKeyRemapTests`.
+A small AppKit bridge records hardware shortcuts and manages the menu bar app's
+window lifecycle. There are no storyboards or AppKit table controllers.
 
-[Releases](https://github.com/dominion525/cmd-eikana/releases) からダウンロードしたアプリは署名・公証済みのため、ダブルクリックで開けます。
+## Building
 
-### 2. アクセシビリティの許可
-
-アクセシビリティ機能へのアクセスの確認ダイアログが表示されるので「"システム設定"を開く」をクリックします。
-プライバシーとセキュリティ > アクセシビリティ で⌘英かな.appにチェックを入れてください。
-
-## オリジナル版からの移行
-
-オリジナル版（iMasanari/cmd-eikana）から移行する場合、Bundle IDが異なるためアクセシビリティの設定が競合することがあります。
-
-1. オリジナル版の⌘英かなを終了
-2. システム設定 →「プライバシーとセキュリティ」→「アクセシビリティ」を開く
-3. 古い⌘英かなのエントリを削除（-ボタン）
-4. 本フォーク版を起動し、新しくアクセシビリティを許可
-
-## 終了方法
-
-右上のステータスバーにある「⌘」アイコンを開き、「Quit」を選びます。
-
-## アンインストール方法
-
-⌘英かな.appをゴミ箱に入れてください。
-また、設定ファイルが`~/Library/Preferences/io.github.dominion525.cmd-eikana.plist`にあります。
-綺麗さっぱり消したいという場合はこちらもゴミ箱に入れてください。
-
-## 動作確認環境
-
-- macOS 15.7 Sequoia (Apple Silicon)
-
-## ビルド方法
-
-```bash
-xcodebuild -project "⌘英かな.xcodeproj" -scheme "⌘英かな" \
-  -configuration Release -arch arm64 clean build
+```sh
+xcodebuild -project SwiftKeyRemap.xcodeproj -scheme SwiftKeyRemap \
+  -configuration Release -arch arm64 build
 ```
 
-**注意:** ソースからビルドした場合は開発署名となるため、初回起動時にGatekeeperによってブロックされます。右クリック（またはControl+クリック）→「開く」で起動してください。
+To build and sign a copy in `build/SwiftKeyRemap.app`, run `./build.sh`.
+The script uses `CODESIGN_IDENTITY`, an available Developer ID Application
+certificate, or an ad hoc signature. A different signature can require granting
+Accessibility and Input Monitoring permissions again.
 
-## Credits
+Run the test suite with:
 
-- Original Author: [iMasanari](https://github.com/iMasanari)
-- Fork Maintainer: [dominion525](https://github.com/dominion525)
+```sh
+xcodebuild test -project SwiftKeyRemap.xcodeproj -scheme SwiftKeyRemap \
+  -destination 'platform=macOS'
+```
 
-## ライセンス
+## Updates
 
-MIT License - Copyright (c) 2016 iMasanari
+In-app installation is disabled for this fork until it has its own signed Sparkle
+feed. **View Releases…** opens this repository's GitHub releases. This prevents an
+upstream update from replacing SwiftKeyRemap with the original app. To enable automatic
+updates, configure your own `SUFeedURL` and `SUPublicEDKey`, then set
+`SwiftKeyRemapUpdatesConfigured` to `YES` and update the release publishing workflow.
+The inherited upstream feed is not started by this build.
+
+## Removing the app
+
+Turn off **Launch at login**, quit SwiftKeyRemap, and move the app to the Trash.
+Preferences remain at
+`~/Library/Preferences/io.github.dominion525.cmd-eikana.plist`.
+
+## License and credits
+
+MIT License. Copyright © 2016 iMasanari.
+Original author: [iMasanari](https://github.com/iMasanari).
+Apple Silicon fork: [dominion525](https://github.com/dominion525).

@@ -1,6 +1,6 @@
 #!/bin/bash
 # アプリまたはディスクイメージを Apple の公証サービスへ提出し、チケットをステープルする。
-# 使い方: Scripts/notarize.sh [対象]   （既定: build/⌘英かな.app）
+# 使い方: Scripts/notarize.sh [対象]   （既定: build/SwiftKeyRemap.app）
 #
 # 対象は .app バンドルか .dmg。公証サービスはバンドルではなく書庫を受け取るため、.app のときは提出用に zip を作る。
 # チケットはアプリ本体にステープルされるので、この zip は提出専用。配布用の書庫は別途作る。.dmg はそのまま提出する。
@@ -12,10 +12,10 @@
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
-TARGET="${1:-${DIR}/build/⌘英かな.app}"
+TARGET="${1:-${DIR}/build/SwiftKeyRemap.app}"
 
 if [ ! -e "${TARGET}" ]; then
-  echo "${TARGET} がありません。.app なら build.sh、.dmg なら make-dmg.sh を先に実行してください。" >&2
+  echo "${TARGET} was not found. Run build.sh for an app or make-dmg.sh for a disk image first." >&2
   exit 1
 fi
 
@@ -24,7 +24,7 @@ if [ -n "${NOTARY_KEYCHAIN_PROFILE:-}" ]; then
 elif [ -n "${NOTARY_KEY_P8:-}" ]; then
   CREDENTIALS=(--key "${NOTARY_KEY_P8}" --key-id "${NOTARY_KEY_ID}" --issuer "${NOTARY_ISSUER_ID}")
 else
-  echo "公証の認証情報がありません。NOTARY_KEYCHAIN_PROFILE か、NOTARY_KEY_P8 と NOTARY_KEY_ID と NOTARY_ISSUER_ID を設定してください。" >&2
+  echo "Notarization credentials are missing. Set NOTARY_KEYCHAIN_PROFILE, or NOTARY_KEY_P8, NOTARY_KEY_ID and NOTARY_ISSUER_ID." >&2
   exit 1
 fi
 
@@ -44,7 +44,7 @@ case "${TARGET}" in
     ASSESS=(-t open --context context:primary-signature)
     ;;
   *)
-    echo "対象は .app バンドルか .dmg だけです: ${TARGET}" >&2
+    echo "Only .app bundles and .dmg images are supported: ${TARGET}" >&2
     exit 1
     ;;
 esac

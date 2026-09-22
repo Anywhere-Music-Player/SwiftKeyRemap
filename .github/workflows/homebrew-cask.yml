@@ -48,7 +48,7 @@ jobs:
             exit 0
           fi
 
-          archive="cmd-eikana-v${version}-arm64.zip"
+          archive="SwiftKeyRemap-v${version}-arm64.zip"
           gh release download "${tag}" -R "${GITHUB_REPOSITORY}" --pattern "${archive}" --dir "${RUNNER_TEMP}"
           sha="$(shasum -a 256 "${RUNNER_TEMP}/${archive}" | awk '{ print $1 }')"
 

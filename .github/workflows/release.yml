@@ -15,7 +15,7 @@ jobs:
     env:
       # 開発に使っている Xcode に固定する。イメージからこの版が消えたら上げる。
       DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
-      INFO_PLIST: cmd-eikana/Info.plist
+      INFO_PLIST: SwiftKeyRemap/Info.plist
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -80,7 +80,7 @@ jobs:
       - name: Package the stapled app
         env:
           VERSION: ${{ steps.version.outputs.version }}
-        run: ditto -c -k --keepParent "build/⌘英かな.app" "cmd-eikana-v${VERSION}-arm64.zip"
+        run: ditto -c -k --keepParent "build/SwiftKeyRemap.app" "SwiftKeyRemap-v${VERSION}-arm64.zip"
 
       # ステープル済みのアプリから作るので、イメージから取り出したアプリもチケットを持つ。
       # ダウンロードの隔離属性はイメージに付くので、イメージ自体にも下でチケットを付ける。
@@ -96,14 +96,14 @@ jobs:
         run: |
           key="${RUNNER_TEMP}/notary.p8"
           echo -n "${NOTARY_KEY_P8_BASE64}" | base64 --decode > "${key}"
-          NOTARY_KEY_P8="${key}" ./Scripts/notarize.sh "build/cmd-eikana-v${VERSION}-arm64.dmg"
+          NOTARY_KEY_P8="${key}" ./Scripts/notarize.sh "build/SwiftKeyRemap-v${VERSION}-arm64.dmg"
           rm -f "${key}"
 
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
-        run: gh release create "${GITHUB_REF_NAME}" "cmd-eikana-v${VERSION}-arm64.zip" "build/cmd-eikana-v${VERSION}-arm64.dmg" --generate-notes
+        run: gh release create "${GITHUB_REF_NAME}" "SwiftKeyRemap-v${VERSION}-arm64.zip" "build/SwiftKeyRemap-v${VERSION}-arm64.dmg" --generate-notes
 
       # ここから先はリリースが存在した状態で動くので、失敗してもリリースは残り、フィードだけが遅れる。
       - name: Check out the update feed
@@ -138,7 +138,7 @@ jobs:
           chmod +x "${tools}/bin/sign_update"
 
           # 鍵は標準入力で渡す。sign_update の -s は非推奨で、現行の generate_keys が作る鍵を受け付けない。
-          archive="cmd-eikana-v${VERSION}-arm64.zip"
+          archive="SwiftKeyRemap-v${VERSION}-arm64.zip"
           signature="$(printf '%s' "${SPARKLE_PRIVATE_KEY}" \
             | "${tools}/bin/sign_update" --ed-key-file - "${archive}")"
           case "${signature}" in
@@ -153,7 +153,7 @@ jobs:
           # 新しい item を channel の直後に入れるので、既存の item を書き換えずに新しい順が保たれる。
           pubdate="$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')"
           # Sparkle のドキュメントは major.minor.patch 形式を推奨しているので、12.0 のような値には .0 を補う
-          minimum="$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "build/⌘英かな.app/Contents/Info.plist")"
+          minimum="$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "build/SwiftKeyRemap.app/Contents/Info.plist")"
           case "${minimum}" in
             *.*.*) ;;
             *.*) minimum="${minimum}.0" ;;
@@ -176,7 +176,7 @@ jobs:
                 <pubDate>${pubdate}</pubDate>
                 <sparkle:minimumSystemVersion>${minimum}</sparkle:minimumSystemVersion>
                 <sparkle:releaseNotesLink>https://eikana.dominion525.com/release-notes/${VERSION}.html</sparkle:releaseNotesLink>
-                <enclosure url="https://github.com/dominion525/cmd-eikana/releases/download/${GITHUB_REF_NAME}/${archive}"
+                <enclosure url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${archive}"
                            sparkle:version="${BUILD}"
                            sparkle:shortVersionString="${VERSION}"
                            ${signature}
@@ -192,8 +192,8 @@ jobs:
 
           # サイトのダウンロードボタンの版の文字も、フィードと同じコミットで今回の版にする。
           # 一致しない sed は何も変えずに成功するので、書き換わったことを確かめる。
-          sed -i '' "s|Download ⌘英かな-v[0-9.]*|Download ⌘英かな-v${VERSION}|" feed/index.md
-          grep -qF "Download ⌘英かな-v${VERSION}" feed/index.md \
+          sed -i '' "s|Download SwiftKeyRemap-v[0-9.]*|Download SwiftKeyRemap-v${VERSION}|" feed/index.md
+          grep -qF "Download SwiftKeyRemap-v${VERSION}" feed/index.md \
             || { echo "the download button in index.md was not updated to ${VERSION}" >&2; exit 1; }
 
           cd feed
@@ -204,7 +204,7 @@ jobs:
           fi
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -m "⌘英かな ${VERSION}"
+              commit -m "SwiftKeyRemap ${VERSION}"
           git push
 
   # 失敗しても homebrew-cask.yml を手動実行すれば cask だけを更新できるので、リリースのやり直しは要らない。

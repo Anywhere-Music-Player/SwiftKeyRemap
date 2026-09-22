@@ -1,5 +1,5 @@
 #!/bin/bash
-# build/⌘英かな.app から配布用のディスクイメージ build/cmd-eikana-v<版>-arm64.dmg を作る（create-dmg を使う。brew install create-dmg）。
+# build/SwiftKeyRemap.app から配布用のディスクイメージ build/SwiftKeyRemap-v<版>-arm64.dmg を作る（create-dmg を使う。brew install create-dmg）。
 #
 # 先に build.sh と notarize.sh を実行しておくこと。アプリはそのままイメージに入るので、
 # ステープル済みのチケットを持っている必要がある。イメージ自体の公証は、出来上がった dmg に対して
@@ -8,25 +8,25 @@ set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-APP_NAME="⌘英かな"
+APP_NAME="SwiftKeyRemap"
 APP_DIR="${DIR}/build/${APP_NAME}.app"
 WORK="${DIR}/build/dmg"
 STAGING="${WORK}/staging"
 BACKGROUND="${WORK}/background.png"
 
 if [ ! -d "${APP_DIR}" ]; then
-  echo "${APP_DIR} がありません。先に build.sh を実行してください。" >&2
+  echo "${APP_DIR} was not found. Run build.sh first." >&2
   exit 1
 fi
 
 if ! command -v create-dmg > /dev/null; then
-  echo "create-dmg がありません。brew install create-dmg で入れてください。" >&2
+  echo "create-dmg was not found. Install it with brew install create-dmg." >&2
   exit 1
 fi
 
 # 版はビルド済みアプリの Info.plist から取る。配布物の名前は zip と同じ規則にする
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP_DIR}/Contents/Info.plist")"
-DMG="${DIR}/build/cmd-eikana-v${VERSION}-arm64.dmg"
+DMG="${DIR}/build/SwiftKeyRemap-v${VERSION}-arm64.dmg"
 
 # 署名 ID の選び方は build.sh と同じ: CODESIGN_IDENTITY があればそれ、なければ Keychain の Developer ID Application、
 # どちらもなければ署名しない。イメージの署名は公証に必須ではないが、証明書があるなら付けておく。
@@ -67,7 +67,7 @@ if [ -n "${IDENTITY}" ]; then
   echo "==> codesign (${IDENTITY})"
   codesign --force --timestamp --sign "${IDENTITY}" --identifier "io.github.dominion525.cmd-eikana.dmg" "${DMG}"
 else
-  echo "==> codesign skipped: Developer ID Application の証明書も CODESIGN_IDENTITY もありません"
+  echo "==> codesign skipped: no Developer ID Application certificate or CODESIGN_IDENTITY was found"
 fi
 
 echo "==> done: ${DMG}"
