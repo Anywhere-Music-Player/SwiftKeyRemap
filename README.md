@@ -1,6 +1,30 @@
-# SwiftKeyRemap
+<p align="center">
+  <img src="docs/app-icon.png" alt="SwiftKeyRemap app icon" width="160" height="160">
+</p>
 
-[GitHub repository](https://github.com/Anywhere-Music-Player/SwiftKeyRemap)
+<h1 align="center">SwiftKeyRemap</h1>
+
+<p align="center">
+  <strong>Your keys. Your shortcuts.</strong><br>
+  A lightweight macOS menu bar app that makes your keyboard work your way.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Anywhere-Music-Player/SwiftKeyRemap/releases/latest"><img src="https://img.shields.io/github/v/release/Anywhere-Music-Player/SwiftKeyRemap?style=flat-square&amp;color=7952CC" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/macOS-14%2B-222222?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="macOS 14 or later">
+  <img src="https://img.shields.io/badge/Apple_Silicon-arm64-7952CC?style=flat-square" alt="Apple Silicon arm64">
+  <img src="https://img.shields.io/badge/Built_with-SwiftUI-F05138?style=flat-square&amp;logo=swift&amp;logoColor=white" alt="Built with SwiftUI">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Anywhere-Music-Player/SwiftKeyRemap/releases/latest"><strong>Download for macOS</strong></a>
+  &nbsp;·&nbsp; <a href="#getting-started">Getting started</a>
+  &nbsp;·&nbsp; <a href="https://github.com/Anywhere-Music-Player/SwiftKeyRemap/releases">Release notes</a>
+  &nbsp;·&nbsp; <a href="https://github.com/Anywhere-Music-Player/SwiftKeyRemap/issues">Report an issue</a>
+</p>
+
+---
 
 A lightweight menu bar app for remapping keys and keyboard shortcuts on macOS.
 Assign different actions to the left and right Command keys, replace shortcuts,
@@ -9,6 +33,17 @@ disable individual keys, and turn remapping off in selected apps.
 SwiftKeyRemap is based on [cmd-eikana](https://github.com/iMasanari/cmd-eikana)
 (originally named ⌘英かな), with Apple Silicon support from
 [dominion525's fork](https://github.com/dominion525/cmd-eikana).
+
+## Features
+
+| Feature | What you can do |
+| :--- | :--- |
+| ⌘ **Left & right Command** | Give each Command key its own action when tapped. |
+| ⌨️ **Custom shortcuts** | Remap keys and key combinations to the shortcuts you prefer. |
+| 🚫 **Disable keys** | Block an unwanted key or shortcut with the Disable action. |
+| 🎯 **Per-app exclusions** | Pause remapping automatically in selected apps. |
+| ⚡ **Quick controls** | Enable or pause individual mappings without deleting them. |
+| 🚀 **Launch at login** | Keep your mappings available whenever you sign in. |
 
 ## Requirements
 
@@ -21,7 +56,8 @@ Xcode 27 currently resolves this to macOS 14.0; a future Xcode version may chang
 
 ## Getting started
 
-1. Build the app and move **SwiftKeyRemap.app** to **Applications**.
+1. Download the ZIP from the [latest release](https://github.com/Anywhere-Music-Player/SwiftKeyRemap/releases/latest),
+   unzip it, and move **SwiftKeyRemap.app** to **Applications**. You can also [build from source](#building).
 2. Open the app and allow **Accessibility** and **Input Monitoring** in
    **System Settings → Privacy & Security** when prompted.
 3. Click the **⌘** menu bar icon and choose **Settings…**.
@@ -96,8 +132,16 @@ Turn off **Launch at login**, quit SwiftKeyRemap, and move the app to the Trash.
 Preferences remain at
 `~/Library/Preferences/io.github.dominion525.cmd-eikana.plist`.
 
+## Contributing
+
+Bug reports and pull requests are welcome. When [opening an issue](https://github.com/Anywhere-Music-Player/SwiftKeyRemap/issues),
+include your macOS version, SwiftKeyRemap version, keyboard layout, and the mapping
+or steps needed to reproduce the problem.
+
+For code changes, see [Building](#building) for build and test commands.
+
 ## License and credits
 
-MIT License. Copyright © 2016 iMasanari.
+[MIT License](LICENSE). Copyright © 2016 iMasanari.
 Original author: [iMasanari](https://github.com/iMasanari).
 Apple Silicon fork: [dominion525](https://github.com/dominion525).
